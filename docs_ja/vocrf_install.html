@@ -1,0 +1,100 @@
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<title>インストール・使用方法：CRFSuite for variable-order Markov models</title>
+</head>
+<body>
+<h1>CRFSuite for variable-order Markov models のインストール・使用方法</h1>
+<h2>インストール</h2>
+<p>
+<a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a> と同じく、ソースコードからビルドする場合、本ソフトウェアは <a href="http://www.chokkan.org/software/liblbfgs/">libLBFGS</a> を必要とします（Windows バイナリでは静的リンクされているため必要ありません。<a href="#usage">使用方法</a>をご覧ください）。Unix 系 OS での典型的な手順を次に示します。
+</p>
+<p>まず、<a href="http://www.chokkan.org/software/liblbfgs/">libLBFGS</a> のページからソースコードをダウンロードし、適当なディレクトリに展開します。その後、configure を --prefix オプションでインストールパスを指定して実行し、 make -> make install します。
+<pre>
+<code>
+[/path/where/you/extracted/libLBFGS/] ./configure --prefix=/install/path/of/libLBFGS/
+[/path/where/you/extracted/libLBFGS/] make
+[/path/where/you/extracted/libLBFGS/] make install
+</code>
+</pre>
+</p>
+<p>
+その後、CRFSuite for variable-order Markov models (crfsuite-variableorder) の <a href="https://github.com/hiroshi-manabe/crfsuite-variableorder">github リポジトリ</a>から圧縮ファイルをダウンロードし、適当なディレクトリに展開します。その後、configure を --with-liblbfgs オプションで上記の libLBFGS インストールパスを指定、--prefix で crfsuite-variableorder のインストールパスを指定して実行し、make -> make install します。
+<pre>
+<code>
+[/path/where/you/extracted/crfsuite-variableorder/] ./configure --with-liblbfgs=/install/path/of/libLBFGS/ --prefix=/install/path/of/crfsuite-variableorder/
+[/path/where/you/extracted/crfsuite-variableorder/] make
+[/path/where/you/extracted/crfsuite-variableorder/] make install
+</code>
+</pre>
+</p>
+<h2>使用方法</h2>
+<a name="usage">
+<p>
+基本的な使い方は <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a> と共通ですが、素性を自動生成せず、ファイルから読み込むというところが違います。素性を記述したファイルは -f または --features オプションで指定します。n-1次の素性を指定する場合、フォーマットは次の通りです。
+<pre>
+ATTR[tab]LABEL0[tab]LABEL1[tab]...LABELn[newline]
+</pre>
+LABEL0 は現在位置でのラベル、LABEL1 は前位置のラベル…という順番です。例えば、「前々位置でのラベルが NN、前位置でのラベルがVBZ、現在位置でのラベルが IN、現在位置での単語が "like"」という素性であれば、次のようになります。
+<pre>
+W0_like[tab]IN[tab]VBZ[tab]NN[newline]
+</pre>
+("W0_" は適当なプレフィックスです)
+</p>
+
+<p>
+訓練データファイル・評価データファイルの形式はオリジナルの CRFSuite と共通です。<a href="http://www.chokkan.org/software/crfsuite/manual.html">CRFSuite マニュアル</a>をご参照ください。
+</p>
+<p>
+素性データ・訓練データ・評価データ共に、手動で作ることは現実的ではないため、スクリプトを使用して生成することになります。ソースコード・バイナリパッケージ共に、"example" ディレクトリの下にサンプルスクリプト "conv.py" を入れてあります。これは主に英語の品詞タグ付けタスクを想定したもので、それ以外のタスクには、それに対応したスクリプトを作成する必要があります。
+</p>
+<p>
+Penn Treebank 3 をお持ちでしたら、次のような手順で私の修士論文の実験を再現できます。
+</p>
+<p>
+example ディレクトリ下の mrg_to_pos.py の中の mrg ディレクトリへのパスを修正し、mrg ファイルを次のようなテキストファイルに変換します。
+<pre>
+NNP	Pierre
+NNP	Vinken
+,	,
+...
+</pre>
+</p>
+<p>
+0-18 が train.txt になり、22-24 がtest.txt になります。ここで conv.py を実行することで、私の修士論文中での「最大 2次」と同じデータができます（終端処理などの変更により、正確に同じ素性数にはなりません）。素性データ・訓練データ・評価データはそれぞれ features.txt, train_data.txt, test_data.txt となります。features.txt は次のようになっています。
+<pre>
+</pre>
+train_data.txt/test_data.txt は次のようになります。
+<pre>
+NNP	LABEL	W0_Pierre	W-1_	W+1_Vinken	W-10__Pierre	W0+1_Pierre_Vinken	W-2-1__	W-2-10___Pierre	W-3-2-1___	suf1_e	pre1_P	suf2_re	pre2_Pi	suf3_rre	pre3_Pie	suf4_erre	pre4_Pier	suf5_ierre	pre5_Pierr	suf6_Pierre	pre6_Pierre	CONTAIN_UPPER
+NNP	LABEL	W0_Vinken	W-1_Pierre	W+1_,	W-10_Pierre_Vinken	W0+1_Vinken_,	W-2-1__Pierre	W-2-10__Pierre_Vinken	W-3-2-1___Pierre	suf1_n	pre1_V	suf2_en	pre2_Vi	suf3_ken	pre3_Vin	suf4_nken	pre4_Vink	suf5_inken	pre5_Vinke	suf6_Vinken	pre6_Vinken	CONTAIN_UPPER
+,	LABEL	W0_,	W-1_Vinken	W+1_61	W-10_Vinken_,	W0+1_,_61	W-2-1_Pierre_Vinken	W-2-10_Pierre_Vinken_,	W-3-2-1__Pierre_Vinken	suf1_,	pre1_,
+</pre>
+</p>
+<p>
+訓練時は、次のようにします。
+<pre>
+<code>
+$ crfsuite learn -m wsj.model -t test_data.txt -f features.txt train_data.txt
+</code>
+</pre>
+2～30GB程度のメモリが必要になりますので注意してください（シーケンシャルアクセスため、本来 HDD に書き出しても問題ないのですが、準備時間の都合上メインメモリで処理しています）。wsj.model にモデルデータが出力されます。
+</p>
+<p>
+タグ付けは、次のようにします。
+<pre>
+<code>
+$ crfsuite tag -m wsj.model test.txt
+</code>
+</pre>
+</p>
+<p>
+評価のためには、次のようにします。
+<pre>
+<code>
+$ crfsuite tag -m wsj.model -qt test.txt
+</code>
+</pre>
+</p>
+</body>
+</html>
