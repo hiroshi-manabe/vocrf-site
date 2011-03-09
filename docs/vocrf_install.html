@@ -28,8 +28,8 @@ Next, download the package of CRFSuite for variable-order Markov models (crfsuit
 </code>
 </pre>
 </p>
-<h2>Usage</h2>
 <a name="usage">
+<h2>Usage</h2>
 <p>
 The basic usage is common as the original <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a>. The difference lies that crfsuite-variableorder does not auto-generate features and instead read them from a file, which should be specified by -f or --features option. Here is the format to describe a featre of (n-1)th order.
 <pre>
@@ -100,5 +100,20 @@ $ crfsuite tag -m wsj.model -qt test.txt
 </code>
 </pre>
 </p>
+<h2>Detailed usage</h2>
+<p>
+CRFSuite for variable-order Markov model shares most of the options with the original CRFSuite. Please refer to the <a href="http://www.chokkan.org/software/crfsuite/manual.html">CRFSuite manual</a>.
+</p>
+<p>
+Here is the list of the differences.
+</p>
+<ul>
+<li>As stated above, you must provide a "-f" or "--features" option to specify the file to read features from when the "learn" option is selected.</li>
+<li>All parameters of the original CRFSuite that have to do with the features are disabled, including "feature.minfreq". To achieve the same goal, you have to count the appearances of each feature in your conversion script and exclude the ones that don't match the criteria. The appearances of features listed in the features file will be computed automatically and used for learning.
+</li>
+<li>Training by SGD is not supported. Consequently, the only option that can be specified by "algorithm" option is "lbfgs".
+</li>
+<li>The "dump" option is not implemented yet.</li>
+</ul>
 </body>
 </html>

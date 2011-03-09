@@ -28,8 +28,8 @@
 </code>
 </pre>
 </p>
-<h2>使用方法</h2>
 <a name="usage">
+<h2>使用方法</h2>
 <p>
 基本的な使い方は <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a> と共通ですが、素性を自動生成せず、ファイルから読み込むというところが違います。素性を記述したファイルは -f または --features オプションで指定します。n-1次の素性を指定する場合、フォーマットは次の通りです。
 <pre>
@@ -56,6 +56,10 @@ example ディレクトリ下の mrg_to_pos.py の中の mrg ディレクトリ�
 <pre>
 NNP	Pierre
 NNP	Vinken
+,	,
+CD	61
+NNS	years
+JJ	old
 ,	,
 ...
 </pre>
@@ -96,5 +100,18 @@ $ crfsuite tag -m wsj.model -qt test.txt
 </code>
 </pre>
 </p>
+<h2>詳細な使い方</h2>
+<p>
+CRFSuite for variable-order Markov model の多くのオプションは CRFSuite と共通です。<a href="http://www.chokkan.org/software/crfsuite/manual.html">CRFSuite マニュアル</a> をご参照ください。
+</p>
+<p>
+ここでは、CRFSuite との差分について記述します。
+</p>
+<ul>
+<li>learn オプションを指定する時には、上で述べたとおり、-f または --features オプションで素性を記述したファイルを指定する必要があります。</li>
+<li>CRFSuite のパラメータの中で、素性に関わるものはすべて無効になっています。feature.minfreq も指定できませんので、評価データの中である程度以上出現するもののみを選択して、素性ファイルに記述する必要があります。記述された素性については、訓練データ中での素性の出現回数は自動的に計算され、学習に使用されます。</li>
+<li>SGD による訓練はサポートしていません。アルゴリズムに lbfgs 以外を指定することはできません。</li>
+<li>dump オプションは、現時点では実装されていません（実装予定）。</li>
+</ul>
 </body>
 </html>
