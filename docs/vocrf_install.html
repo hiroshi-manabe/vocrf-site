@@ -9,7 +9,7 @@
 <h1>Installation and usage of CRFSuite for variable-order Markov models</h1>
 <h2>Installation</h2>
 <p>
-In order to build this software from the source code, you will need <a href="http://www.chokkan.org/software/liblbfgs/">libLBFGS</a>, as is also the case for the original CRFSuite (You don't need libLBFGS to use the Windows binary as they are statically linked. <a href="#usage">Skip to the usage</a>). Here is typical steps to take on a Unix-compatible platforms.
+In order to build this software from the source code, you will need <a href="http://www.chokkan.org/software/liblbfgs/">libLBFGS</a>, as is also the case for the original CRFSuite (You don't need libLBFGS to use the Windows binary as they are statically linked. <a href="#usage">Skip to the usage</a>). Here are typical steps to take on a Unix-compatible platforms.
 </p>
 <p>First, download the source code package from the <a href="http://www.chokkan.org/software/liblbfgs/">libLBFGS</a> page and unpack it to a temporary directory. Execute 'configure' with a '--prefix' option to designate the install path. 'make' &amp; 'make install'.
 <pre>
@@ -33,7 +33,7 @@ Next, download the package of CRFSuite for variable-order Markov models (crfsuit
 <a name="usage">
 <h2>Usage</h2>
 <p>
-The basic usage is common as the original <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a>. The difference lies that crfsuite-variableorder does not auto-generate features and instead read them from a file, which should be specified by -f or --features option. Here is the format to describe a featre of (n-1)th order.
+The basic usage is common as the original <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a>. The difference lies that crfsuite-variableorder does not auto-generate features and instead read them from a file, which should be specified by -f or --features option. Here is the format to describe a feature of (n-1)th order.
 <pre>
 ATTR[tab]LABEL0[tab]LABEL1[tab]...LABELn[newline]
 </pre>
@@ -48,13 +48,13 @@ where "W0_" is an arbitrary prefix.
 The format of training/evaluation data file is the same as the original CRFSuite. Please refer to the <a href="http://www.chokkan.org/software/crfsuite/manual.html">CRFSuite manual</a>.
 </p>
 <p>
-It is not realistic to manually write the features/training/evaluation files, so you will need a script to generate them. The source and binary packages contain an "example" directory, under which you can find a python script "conv.py". I wrote this script for the English POS-tagging task. You should custamize the script in order to apply to other kind of tasks.
+It is not realistic to manually write the features/training/evaluation files, so you will need a script to generate them. The source and binary packages contain an "example" directory, under which you can find a python script "conv.py". I wrote this script for the English POS-tagging task. You should customize the script in order to apply to other kind of tasks.
 </p>
 <p>
 If you have Penn Treebank 3, you can reproduce the experiences in my thesis:
 </p>
 <p>
-Open mrg_to_pos.py under "example" and modify the part which contains the path to the "mrg" directory. Run the script to convert the .mrg files into text files, which should look like:
+Open mrg_to_pos.py under "example" and modify the part that contains the path to the "mrg" directory. Run the script to convert the .mrg files into text files, which should look like:
 <pre>
 NNP	Pierre
 NNP	Vinken
@@ -67,8 +67,14 @@ JJ	old
 </pre>
 </p>
 <p>
-train.txt and test.txt respectively contain data in 0-18 and 22-24. Execute "conv.py" to generate the same dataset as in "maximun 2nd order" in my thesis (the number of the features won't be exactly the same because of the changes in end-of-sequence processing. Features/training/evaluation data should be output respectively as "features.txt", "train_data.txt", "test_data.txt". features.txt should look like as follows:
+train.txt and test.txt respectively contain data in 0-18 and 22-24. Execute "conv.py" to generate the same dataset as in "maximum 2nd order" in my thesis (the number of the features won't be exactly the same because of the changes in end-of-sequence processing. Features/training/evaluation data should be output respectively as "features.txt", "train_data.txt", "test_data.txt". features.txt should look like as follows:
 <pre>
+W-2-1_of_crop	.
+W-2-1_of_crop	NN
+W0+1_still-raging_bidding	VBG
+W-2-10_did_a_story	NN
+W-2-10_David_Boren_-LRB-	(
+W-3-2-1__``_Five	VBD
 </pre>
 train_data.txt/test_data.txt should look like as follows:
 <pre>
@@ -84,7 +90,7 @@ To train the model, input the following line:
 $ crfsuite learn -m wsj.model -t test_data.txt -f features.txt train_data.txt
 </code>
 </pre>
-The program consumes 20 to 30 gigabytes (it could have been programmed to swap out the data as it is accessed only sequentially, but I choosed not to, because of the lack of time). The model will be output as wsj.model.
+The program consumes 20 to 30 gigabytes (it could have been programmed to swap out the data as it is accessed only sequentially, but I chose not to, because of the lack of time). The model will be output as wsj.model.
 </p>
 <p>
 To tag sentences using the model, input the following line:
