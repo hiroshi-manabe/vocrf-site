@@ -139,7 +139,12 @@ function TouchEnd(e) {
   if (touch_state.keypad_state == 'sub') {
     var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
     var index = ToIndex(cell_offset_x, cell_offset_y);
-    $('#state_area').text($('#state_area').text() + kSubKeypadData[base_index][index]);
+    if (index >= 0 && index < 9) {
+      var text = kSubKeypadData[base_index][index];
+      if (text != '') {
+        $('#state_area').text($('#state_area').text() + text);
+      }
+    }
   }
   touch_state.keypad_state = 'none';
   $('#sub_keypad').hide();
@@ -158,7 +163,7 @@ $(document.body).bind({
 </script>
 </head>
 <body>
-<span id='state_area'></span>
+<span id='state_area' style='font-size: 50px;'></span>
 <table id='basic_keypad' style='display: none; position: absolute;'>
 <tr>
 <td>あ</td>
