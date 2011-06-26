@@ -39,7 +39,7 @@ var kSubKeypadData = [
   ['', 'ぬ', '', 'に', 'な', 'ね', '', 'の', ''],
   ['', 'ふ', '', 'ひ', 'は', 'へ', '', 'ほ', ''],
   ['', 'む', '', 'み', 'ま', 'め', '', 'も', ''],
-  ['', 'ゆ', '',   '', 'や',   '', '', 'よ', ''],
+  ['BS', 'ゆ', 'を', '改', 'や', 'ん', 'わ', 'よ', 'ー'],
   ['', 'る', '', 'り', 'ら', 'れ', '', 'ろ', '']
 ];
 
@@ -90,7 +90,7 @@ function TouchMove(e) {
       (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
     for (var i = 0; i < 9; ++i) {
       if (kSubKeypadData[index][i] == '') {
-        $('#sub_' + i).addClass('sub_hide').removeClass('sub_show');
+        $('#sub_' + i).addClass('sub_hide').removeClass('sub_show').text('');
       } else {
         $('#sub_' + i).addClass('sub_show').removeClass('sub_hide')
                       .text(kSubKeypadData[index][i]);
@@ -142,7 +142,16 @@ function TouchEnd(e) {
     if (index >= 0 && index < 9) {
       var text = kSubKeypadData[base_index][index];
       if (text != '') {
-        $('#state_area').text($('#state_area').text() + text);
+        cur_text = $('#state_area').html();
+        if (text == 'BS') {
+          cur_text = cur_text.replace(/(<br>|.)$/, '');
+        } else {
+          if (text == '改') {
+            text = '<br>';
+          }
+          cur_text += text;
+        }
+        $('#state_area').html(cur_text);
       }
     }
   }
