@@ -65,18 +65,14 @@ function TouchStart(e) {
         continue;
       }
       var ok = false;
-      for (i = 0; i < 2; ++i) {
-        if (!keypad_occupied[i]) {
-          keypad_num = i;
+      for (j = 0; j < 2; ++j) {
+        if (!keypad_occupied[j]) {
+          keypad_num = j;
           ok = true;
-          keypad_occupied[i] = true;
-          trace(i + ' good');
+          keypad_occupied[j] = true;
           break;
-        } else {
-          trace(i + ' no good');
         }
       }
-      trace('ok: ' + ok);
       if (!ok) {
         return;
       }
@@ -193,7 +189,6 @@ function TouchEnd(e) {
     var touch_state = touch_states[identifier];
     var k = touch_state.keypad_num;
 
-    var index = ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
     if (touch_state.keypad_state == 'sub') {
       var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
       var index = ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
