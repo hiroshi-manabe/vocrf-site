@@ -3,12 +3,13 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <title>test</title>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+<script type="text/javascript" src="jquery.dump.js"></script>
 <style type="text/css">
 table {
   width: 960px;
   height: 960px;
   border-collapse: collapse;
-  border: 1px solid;
+  border: 1px solid;>
 }
 td {
   font-size: 160px;
@@ -29,7 +30,7 @@ td {
 <script>
 var is_touch = ('ontouchstart' in window);
 var kCellSize = 320;
-var touch_state = {};
+var touch_states = [{}, {}];
 var kSubKeypadData = [
   ['', 'う', '', 'い', 'あ', 'え', '', 'お', ''],
   ['', 'く', '', 'き', 'か', 'け', '', 'こ', ''],
@@ -51,116 +52,146 @@ function ToIndex(x, y) {
 
 function TouchStart(e) {
   e.preventDefault();
-  touch_state.touched = true;
-  touch_state.cell_sequence = [[0, 0]];
-  touch_state.start_x = (is_touch ? event.changedTouches[0].pageX : e.pageX);
-  touch_state.start_y = (is_touch ? event.changedTouches[0].pageY : e.pageY);
-  $('#basic_keypad').css('top', touch_state.start_y - $('#basic_keypad').height() / 2)
-                    .css('left', touch_state.start_x - $('#basic_keypad').width() / 2)
-                    .show();
-  touch_state.cell_base_x = 0;
-  touch_state.cell_base_y = 0;
-  touch_state.keypad_state = 'basic';
+  for (var i = 0; i < 2; ++i) {
+    var touch_state = null;
+    if (is_touch) {
+      $('#dump_area').append($.dump(event.changedTouches)).append(event.touches).append(event.targetTouches);
+    } else {
+      if (i != 0) {
+        continue;
+      }
+      touch_state = touch_states[0];
+    }
+
+    touch_state = touch_states[i];
+    touch_state.touched = true;
+    touch_state.cell_sequence = [[0, 0]];
+    touch_state.start_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
+    touch_state.start_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
+    $('#basic_keypad_' + i).css('top', touch_state.start_y - $('#basic_keypad_' + i).height() / 2)
+                      .css('left', touch_state.start_x - $('#basic_keypad_' + i).width() / 2)
+                      .show();
+    touch_state.cell_base_x = 0;
+    touch_state.cell_base_y = 0;
+    touch_state.keypad_state = 'basic';
+  }
 }
 
 function TouchMove(e) {
-  if (!touch_state.touched) {
-    return;
-  }
   e.preventDefault();
-  touch_state.current_x = (is_touch ? event.changedTouches[0].pageX : e.pageX);
-  touch_state.current_y = (is_touch ? event.changedTouches[0].pageY : e.pageY);
-  var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-  for (var x = -2; x <= 2; ++x) {
-    for (var y = -2; y <= 2; ++y) {
-      if (Math.sqrt(
-        Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
-        Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
-        !(x == prev_cell[0] && y == prev_cell[1])) {
-        touch_state.cell_sequence.push([x, y]);
+  for (var i = 0; i < 2; ++i) {
+    if (!(is_touch && event.changedTouches[i] || !is_touch && i == 0)) {
+      continue;
+    }
+    touch_state = touch_states[i];
+    if (!touch_state.touched) {
+      continue;
+    }
+    touch_state.current_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
+    touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
+    var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
+    for (var x = -2; x <= 2; ++x) {
+      for (var y = -2; y <= 2; ++y) {
+        if (Math.sqrt(
+          Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
+          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
+          !(x == prev_cell[0] && y == prev_cell[1])) {
+          touch_state.cell_sequence.push([x, y]);
+        }
       }
     }
-  }
-  var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-  cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
-  cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
-  var index = ToIndex(cell_offset_x, cell_offset_y);
-  if ((touch_state.keypad_state == 'basic2' && index >=0 && index < 9) ||
-      (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
-    for (var i = 0; i < 9; ++i) {
-      if (kSubKeypadData[index][i] == '') {
-        $('#sub_' + i).addClass('sub_hide').removeClass('sub_show').text('');
-      } else {
-        $('#sub_' + i).addClass('sub_show').removeClass('sub_hide')
-                      .text(kSubKeypadData[index][i]);
+    var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
+    cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
+    cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
+    var index = ToIndex(cell_offset_x, cell_offset_y);
+    if ((touch_state.keypad_state == 'basic2' && index >=0 && index < 9) ||
+        (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
+      for (var j = 0; j < 9; ++j) {
+        if (kSubKeypadData[index][j] == '') {
+          $('#sub_' + i + '_' + j).addClass('sub_hide').removeClass('sub_show').text('');
+        } else {
+          $('#sub_' + i + '_' + j).addClass('sub_show').removeClass('sub_hide')
+                                  .text(kSubKeypadData[index][j]);
+        }
       }
-    }
-    $('#sub_keypad').css('top', touch_state.start_y - $('#sub_keypad').height() / 2 +
-                         cell_offset_y * kCellSize)
-                    .css('left', touch_state.start_x - $('#sub_keypad').width() / 2 +
-                         cell_offset_x * kCellSize)
-                    .show();
-    touch_state.keypad_state = 'sub';
-    touch_state.cell_base_x = cur_cell[0];
-    touch_state.cell_base_y = cur_cell[1];
-  } else if (touch_state.keypad_state == 'sub') {
-    var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
-    if (kSubKeypadData[base_index][index] == '') {
-      touch_state.keypad_state = 'basic2';
-      touch_state.cell_base_x = 0;
-      touch_state.cell_base_y = 0;
-      $('#sub_keypad').hide();
+      $('#sub_keypad_' + i).css('top', touch_state.start_y - $('#sub_keypad_' + i).height() / 2 +
+                                cell_offset_y * kCellSize)
+                           .css('left', touch_state.start_x - $('#sub_keypad_' + i).width() / 2 +
+                                cell_offset_x * kCellSize)
+                           .show();
+      touch_state.keypad_state = 'sub';
+      touch_state.cell_base_x = cur_cell[0];
+      touch_state.cell_base_y = cur_cell[1];
+    } else if (touch_state.keypad_state == 'sub') {
+      var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
+      if (kSubKeypadData[base_index][index] == '') {
+        touch_state.keypad_state = 'basic2';
+        touch_state.cell_base_x = 0;
+        touch_state.cell_base_y = 0;
+        $('#sub_keypad_' + i).hide();
+      }
     }
   }
 }
 
 function TouchEnd(e) {
-  if (!touch_state.touched) {
-    return;
-  }
   e.preventDefault();
-  touch_state.current_x = (is_touch ? event.changedTouches[0].pageX : e.pageX);
-  touch_state.current_y = (is_touch ? event.changedTouches[0].pageY : e.pageY);
-  var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-  for (var x = -2; x <= 2; ++x) {
-    for (var y = -2; y <= 2; ++y) {
-      if (Math.sqrt(
-        Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
-        Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
-        !(x == prev_cell[0] && y == prev_cell[1])) {
-        touch_state.cell_sequence.push([x, y]);
-      }
+  for (var i = 0; i < 2; ++i) {
+    if (!(is_touch && event.changedTouches[i] || !is_touch && i == 0)) {
+      continue;
     }
-  }
-  var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-  cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
-  cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
-  if (touch_state.keypad_state == 'sub') {
-    var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
-    var index = ToIndex(cell_offset_x, cell_offset_y);
-    if (index >= 0 && index < 9) {
-      var text = kSubKeypadData[base_index][index];
-      if (text != '') {
-        cur_text = $('#state_area').html();
-        if (text == 'BS') {
-          cur_text = cur_text.replace(/(<br>|.)$/, '');
-        } else {
-          if (text == '改') {
-            text = '<br>';
-          }
-          cur_text += text;
+    touch_state = touch_states[i];
+    if (!touch_state.touched) {
+      continue;
+    }
+    touch_state.current_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
+    touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
+    var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
+    for (var x = -2; x <= 2; ++x) {
+      for (var y = -2; y <= 2; ++y) {
+        if (Math.sqrt(
+          Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
+          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
+          !(x == prev_cell[0] && y == prev_cell[1])) {
+          touch_state.cell_sequence.push([x, y]);
         }
-        $('#state_area').html(cur_text);
       }
     }
+    var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
+    cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
+    cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
+    var index = ToIndex(cell_offset_x, cell_offset_y);
+    if (touch_state.keypad_state == 'sub') {
+      var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
+      var index = ToIndex(cell_offset_x, cell_offset_y);
+      if (index >= 0 && index < 9) {
+        var text = kSubKeypadData[base_index][index];
+        if (text != '') {
+          cur_text = $('#state_area').html();
+          if (text == 'BS') {
+            cur_text = cur_text.replace(/(<br>|.)$/, '');
+          } else {
+            if (text == '改') {
+              text = '<br>';
+            }
+            cur_text += text;
+          }
+          $('#state_area').html(cur_text);
+        }
+      }
+    }
+    touch_state.keypad_state = 'none';
+    $('#sub_keypad_' + i).hide();
+    $('#basic_keypad_' + i).hide();
   }
-  touch_state.keypad_state = 'none';
-  $('#sub_keypad').hide();
-  $('#basic_keypad').hide();
 }
 
 $(document).ready(function(){
-touch_state.keypad_state = 'none';
+
+for (var i = 0; i < 2; ++i) {
+  touch_states[i].keypad_state = 'none';
+}
+
 $(document.body).bind({
   'touchstart mousedown': TouchStart,
   'touchmove mousemove': TouchMove,
@@ -172,7 +203,9 @@ $(document.body).bind({
 </head>
 <body>
 <span id='state_area' style='font-size: 50px;'></span>
-<table id='basic_keypad' style='display: none; position: absolute;'>
+<div id='dump_area'></div>
+<div id='keypad_area'>
+<table id='basic_keypad_0' style='display: none; position: absolute;'>
 <tr>
 <td>あ</td>
 <td>か</td>
@@ -189,22 +222,57 @@ $(document.body).bind({
 <td>ら</td>
 </tr>
 </table>
-<table id='sub_keypad' style='display: none; border: none; position: absolute;'>
+<table id='basic_keypad_1' style='display: none; position: absolute;'>
 <tr>
-<td id='sub_0'></td>
-<td id='sub_1'></td>
-<td id='sub_2'></td>
+<td>あ</td>
+<td>か</td>
+<td>さ</td>
 </tr>
 <tr>
-<td id='sub_3'></td>
-<td id='sub_4'></td>
-<td id='sub_5'></td>
+<td>た</td>
+<td>な</td>
+<td>は</td>
 </tr>
 <tr>
-<td id='sub_6'></td>
-<td id='sub_7'></td>
-<td id='sub_8'></td>
+<td>ま</td>
+<td>や</td>
+<td>ら</td>
 </tr>
 </table>
+<table id='sub_keypad_0' style='display: none; border: none; position: absolute;'>
+<tr>
+<td id='sub_0_0'></td>
+<td id='sub_0_1'></td>
+<td id='sub_0_2'></td>
+</tr>
+<tr>
+<td id='sub_0_3'></td>
+<td id='sub_0_4'></td>
+<td id='sub_0_5'></td>
+</tr>
+<tr>
+<td id='sub_0_6'></td>
+<td id='sub_0_7'></td>
+<td id='sub_0_8'></td>
+</tr>
+</table>
+<table id='sub_keypad_1' style='display: none; border: none; position: absolute;'>
+<tr>
+<td id='sub_1_0'></td>
+<td id='sub_1_1'></td>
+<td id='sub_1_2'></td>
+</tr>
+<tr>
+<td id='sub_1_3'></td>
+<td id='sub_1_4'></td>
+<td id='sub_1_5'></td>
+</tr>
+<tr>
+<td id='sub_1_6'></td>
+<td id='sub_1_7'></td>
+<td id='sub_1_8'></td>
+</tr>
+</table>
+</div>
 </body>
 </html>
