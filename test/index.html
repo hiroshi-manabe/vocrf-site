@@ -57,7 +57,6 @@ function TouchStart(e) {
     var identifier = 0;
     var keypad_num = -1;
     if (is_touch) {
-      $('#dump_area').text($('#dump_area').text() + ' ' + event.changedTouches[i].identifier);
       if (!(i < event.changedTouches.length)) {
         continue;
       }
@@ -70,6 +69,7 @@ function TouchStart(e) {
           break;
         }
       }
+      $('#dump_area').text($('#dump_area').text() + ' ' + event.changedTouches[i].identifier);
       if (!ok) {
         return;
       }
