@@ -60,7 +60,6 @@ function TouchStart(e) {
       if (!(i < event.changedTouches.length)) {
         continue;
       }
-alert(1);
       var ok = false;
       for (i = 0; i < 2; ++i) {
         if (!keypad_occupied[i]) {
@@ -68,13 +67,14 @@ alert(1);
           keypad_num = i;
           ok = true;
           keypad_occupied[i] = true;
+          break;
         }
       }
-alert(2);
 alert(ok);
       if (!ok) {
         return;
-      }		      
+      }
+alert(1);      
       identifier = event.changedTouches[i].identifier;
 alert(identifier);
     } else {
