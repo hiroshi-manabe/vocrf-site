@@ -55,7 +55,7 @@ function TouchStart(e) {
   for (var i = 0; i < 2; ++i) {
     var touch_state = null;
     if (is_touch) {
-      $('#dump_area').append($.dump(event.changedTouches)).append(event.touches).append(event.targetTouches);
+      $('#dump_area').text($('#dump_area').text() + event.changedTouches[0].identifier);
     } else {
       if (i != 0) {
         continue;
