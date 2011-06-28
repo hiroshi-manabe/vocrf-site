@@ -70,6 +70,7 @@ function TouchStart(e) {
           keypad_num = i;
           ok = true;
           keypad_occupied[i] = true;
+          trace(i + ' good');
           break;
         } else {
           trace(i + ' no good');
@@ -80,6 +81,7 @@ function TouchStart(e) {
         return;
       }
       identifier = event.changedTouches[i].identifier;
+      trace('identifier: ' + identifier);
     } else {
       if (i != 0) {
         continue;
