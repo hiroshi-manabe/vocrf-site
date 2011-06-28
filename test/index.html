@@ -64,6 +64,7 @@ alert(1);
       var ok = false;
       for (i = 0; i < 2; ++i) {
         if (!keypad_occupied[i]) {
+          alert('keypad_occufied[' + i + '] false');
           keypad_num = i;
           ok = true;
           keypad_occupied[i] = true;
