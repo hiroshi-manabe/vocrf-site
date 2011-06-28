@@ -30,7 +30,8 @@ td {
 <script>
 var is_touch = ('ontouchstart' in window);
 var kCellSize = 320;
-var touch_states = [{}, {}];
+var touch_states = {};
+var keypad_occupied = { 0 : false, 1 : false };
 var kSubKeypadData = [
   ['', 'う', '', 'い', 'あ', 'え', '', 'お', ''],
   ['', 'く', '', 'き', 'か', 'け', '', 'こ', ''],
@@ -53,24 +54,43 @@ function ToIndex(x, y) {
 function TouchStart(e) {
   e.preventDefault();
   for (var i = 0; i < 2; ++i) {
-    var touch_state = null;
+    var identifier = 0;
+    var keypad_num = -1;
     if (is_touch) {
-      $('#dump_area').text($('#dump_area').text() + event.changedTouches[0].identifier);
+      if (!(i < event.changedTouches.length)) {
+        continue;
+      }
+      var ok = false;
+      for (i = 0; i < 2; ++i) {
+        if (!keypad_occupied[i]) {
+          keypad_num = i;
+          ok = true;
+          keypad_occupied[i] = true;
+        }
+      }
+      if (!ok) {
+        return;
+      }		      
+      identifier = event.changedTouches[i].identifier;
     } else {
       if (i != 0) {
         continue;
       }
-      touch_state = touch_states[0];
+      identifier = 0;
+      keypad_num = 0;
     }
+    var touch_state = touch_states[identifier] = {};
+    touch_state.keypad_state = 'none';
+    touch_state.keypad_num = keypad_num;
+    var k = touch_state.keypad_num;
 
-    touch_state = touch_states[i];
     touch_state.touched = true;
     touch_state.cell_sequence = [[0, 0]];
     touch_state.start_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
     touch_state.start_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
-    $('#basic_keypad_' + i).css('top', touch_state.start_y - $('#basic_keypad_' + i).height() / 2)
-                      .css('left', touch_state.start_x - $('#basic_keypad_' + i).width() / 2)
-                      .show();
+    $('#basic_keypad_' + k).css('top', touch_state.start_y - $('#basic_keypad_' + k).height() / 2)
+                           .css('left', touch_state.start_x - $('#basic_keypad_' + k).width() / 2)
+                           .show();
     touch_state.cell_base_x = 0;
     touch_state.cell_base_y = 0;
     touch_state.keypad_state = 'basic';
@@ -80,13 +100,24 @@ function TouchStart(e) {
 function TouchMove(e) {
   e.preventDefault();
   for (var i = 0; i < 2; ++i) {
-    if (!(is_touch && event.changedTouches[i] || !is_touch && i == 0)) {
-      continue;
+    var identifier = 0;
+    if (is_touch) {
+      if (!(i < event.changedTouches.length)) {
+        continue;
+      }
+      identifier = event.changedTouches[i].identifier;
+    } else {
+      if (i != 0) {
+        continue;
+      }
+      identifier = 0;
     }
-    touch_state = touch_states[i];
-    if (!touch_state.touched) {
-      continue;
+    if (!(identifier in touch_states)) {
+      return;
     }
+    var touch_state = touch_states[identifier];
+    var k = touch_state.keypad_num;
+
     touch_state.current_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
     touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
     var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
@@ -101,23 +132,23 @@ function TouchMove(e) {
       }
     }
     var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-    cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
-    cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
-    var index = ToIndex(cell_offset_x, cell_offset_y);
+    touch_state.cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
+    touch_state.cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
+    var index =ToIndex( touch_state.cell_offset_x, touch_state.cell_offset_y);
     if ((touch_state.keypad_state == 'basic2' && index >=0 && index < 9) ||
         (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
       for (var j = 0; j < 9; ++j) {
         if (kSubKeypadData[index][j] == '') {
-          $('#sub_' + i + '_' + j).addClass('sub_hide').removeClass('sub_show').text('');
+          $('#sub_' + k + '_' + j).addClass('sub_hide').removeClass('sub_show').text('');
         } else {
-          $('#sub_' + i + '_' + j).addClass('sub_show').removeClass('sub_hide')
+          $('#sub_' + k + '_' + j).addClass('sub_show').removeClass('sub_hide')
                                   .text(kSubKeypadData[index][j]);
         }
       }
-      $('#sub_keypad_' + i).css('top', touch_state.start_y - $('#sub_keypad_' + i).height() / 2 +
-                                cell_offset_y * kCellSize)
-                           .css('left', touch_state.start_x - $('#sub_keypad_' + i).width() / 2 +
-                                cell_offset_x * kCellSize)
+      $('#sub_keypad_' + k).css('top', touch_state.start_y - $('#sub_keypad_' + k).height() / 2 +
+                                touch_state.cell_offset_y * kCellSize)
+                           .css('left', touch_state.start_x - $('#sub_keypad_' + k).width() / 2 +
+                                touch_state.cell_offset_x * kCellSize)
                            .show();
       touch_state.keypad_state = 'sub';
       touch_state.cell_base_x = cur_cell[0];
@@ -128,7 +159,7 @@ function TouchMove(e) {
         touch_state.keypad_state = 'basic2';
         touch_state.cell_base_x = 0;
         touch_state.cell_base_y = 0;
-        $('#sub_keypad_' + i).hide();
+        $('#sub_keypad_' + k).hide();
       }
     }
   }
@@ -137,33 +168,25 @@ function TouchMove(e) {
 function TouchEnd(e) {
   e.preventDefault();
   for (var i = 0; i < 2; ++i) {
-    if (!(is_touch && event.changedTouches[i] || !is_touch && i == 0)) {
-      continue;
-    }
-    touch_state = touch_states[i];
-    if (!touch_state.touched) {
-      continue;
-    }
-    touch_state.current_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
-    touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
-    var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-    for (var x = -2; x <= 2; ++x) {
-      for (var y = -2; y <= 2; ++y) {
-        if (Math.sqrt(
-          Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
-          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
-          !(x == prev_cell[0] && y == prev_cell[1])) {
-          touch_state.cell_sequence.push([x, y]);
-        }
+    var identifier = 0;
+    if (is_touch) {
+      if (!(i < event.changedTouches.length)) {
+        continue;
       }
+      identifier = event.changedTouches[i].identifier;
+    } else {
+      if (i != 0) {
+        continue;
+      }
+      identifier = 0;
     }
-    var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-    cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
-    cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
-    var index = ToIndex(cell_offset_x, cell_offset_y);
+    var touch_state = touch_states[identifier];
+    var k = touch_state.keypad_num;
+
+    var index = ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
     if (touch_state.keypad_state == 'sub') {
       var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
-      var index = ToIndex(cell_offset_x, cell_offset_y);
+      var index = ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
       if (index >= 0 && index < 9) {
         var text = kSubKeypadData[base_index][index];
         if (text != '') {
@@ -181,17 +204,15 @@ function TouchEnd(e) {
       }
     }
     touch_state.keypad_state = 'none';
-    $('#sub_keypad_' + i).hide();
-    $('#basic_keypad_' + i).hide();
+    $('#sub_keypad_' + k).hide();
+    $('#basic_keypad_' + k).hide();
+    delete touch_states[identifier];
+    delete touch_state;
+    keypad_occupied[k] = false;
   }
 }
 
 $(document).ready(function(){
-
-for (var i = 0; i < 2; ++i) {
-  touch_states[i].keypad_state = 'none';
-}
-
 $(document.body).bind({
   'touchstart mousedown': TouchStart,
   'touchmove mousemove': TouchMove,
