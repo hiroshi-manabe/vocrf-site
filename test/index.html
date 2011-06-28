@@ -51,6 +51,10 @@ function ToIndex(x, y) {
   return x + 1 + (y + 1) * 3;
 }
 
+function trace(str) {
+     $('#dump_area').text($('#dump_area').text() + ' ' + str);
+}
+
 function TouchStart(e) {
   e.preventDefault();
   for (var i = 0; i < 2; ++i) {
@@ -67,9 +71,10 @@ function TouchStart(e) {
           ok = true;
           keypad_occupied[i] = true;
           break;
-        }
-      }
-      $('#dump_area').text($('#dump_area').text() + ' ' + event.changedTouches[i].identifier);
+        } else {
+        trace(i + ' no good');
+      } 
+ 
       if (!ok) {
         return;
       }
