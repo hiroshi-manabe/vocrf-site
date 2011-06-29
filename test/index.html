@@ -151,11 +151,26 @@ function TouchMove(e) {
       return;
     }
     touch_state.cell_sequence.push([cell_x, cell_y]);
-    var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
-    touch_state.cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
-    touch_state.cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
+    touch_state.cell_offset_x = cell_x - touch_state.cell_base_x;
+    touch_state.cell_offset_y = cell_y - touch_state.cell_base_y;
     var index =ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
-    if ((touch_state.keypad_state == 'basic2' && index >=0 && index < 9) ||
+
+    if (touch_state.keypad_state == 'sub') {
+      var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
+      $('.sub_key_' + k).removeClass('sub_focus');
+      if (index >= 0 && index < 9 && kSubKeypadData[base_index][index] != '') {
+        $('#sub_' + k + '_' + index).addClass('sub_focus');
+        return;
+      }
+    }
+
+    index = ToIndex(cell_x, cell_y);
+    touch_state.cell_base_x = cell_x;
+    touch_state.cell_base_y = cell_y;
+    touch_state.cell_offset_x = 0;
+    touch_state.cell_offset_y = 0;
+    
+    if ((touch_state.keypad_state == 'sub' && index >=0 && index < 9) ||
         (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
       for (var j = 0; j < 9; ++j) {
         if (kSubKeypadData[index][j] == '') {
@@ -166,28 +181,13 @@ function TouchMove(e) {
         }
       }
       $('#sub_keypad_' + k).css('top', touch_state.start_y - $('#sub_keypad_' + k).height() / 2 +
-                                touch_state.cell_offset_y * kCellSize)
+                                cell_y * kCellSize)
                            .css('left', touch_state.start_x - $('#sub_keypad_' + k).width() / 2 +
-                                touch_state.cell_offset_x * kCellSize)
+                                cell_x * kCellSize)
                            .show();
       touch_state.keypad_state = 'sub';
-      touch_state.cell_base_x = cur_cell[0];
-      touch_state.cell_base_y = cur_cell[1];
-      touch_state.cell_offset_x = 0;
-      touch_state.cell_offset_y = 0;
       $('.sub_key_' + k).removeClass('sub_focus');
       $('#sub_' + k + '_' + ToIndex(0, 0)).addClass('sub_focus');
-    } else if (touch_state.keypad_state == 'sub') {
-      var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
-      $('.sub_key_' + k).removeClass('sub_focus');
-      if (kSubKeypadData[base_index][index] != '') {
-        $('#sub_' + k + '_' + index).addClass('sub_focus');
-      } else {
-        touch_state.keypad_state = 'basic2';
-        touch_state.cell_base_x = 0;
-        touch_state.cell_base_y = 0;
-        $('#sub_keypad_' + k).hide();
-      }
     }
   }
 }
