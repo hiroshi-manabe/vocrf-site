@@ -165,13 +165,13 @@ function TouchMove(e) {
     }
 
     index = ToIndex(cell_x, cell_y);
-    touch_state.cell_base_x = cell_x;
-    touch_state.cell_base_y = cell_y;
-    touch_state.cell_offset_x = 0;
-    touch_state.cell_offset_y = 0;
-    
     if ((touch_state.keypad_state == 'sub' && index >=0 && index < 9) ||
         (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
+      touch_state.cell_base_x = cell_x;
+      touch_state.cell_base_y = cell_y;
+      touch_state.cell_offset_x = 0;
+      touch_state.cell_offset_y = 0;
+    
       for (var j = 0; j < 9; ++j) {
         if (kSubKeypadData[index][j] == '') {
           $('#sub_' + k + '_' + j).addClass('sub_hide').removeClass('sub_show').text('');
