@@ -175,15 +175,17 @@ function TouchMove(e) {
       touch_state.cell_base_y = cur_cell[1];
       touch_state.cell_offset_x = 0;
       touch_state.cell_offset_y = 0;
+      $('.sub_key_' + k).removeClass('sub_focus');
+      $('#sub_' + k + '_' + ToIndex(0, 0)).addClass('sub_focus');
     } else if (touch_state.keypad_state == 'sub') {
       var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
+      $('.sub_key_' + k).removeClass('sub_focus');
       if (kSubKeypadData[base_index][index] != '') {
         $('#sub_' + k + '_' + index).addClass('sub_focus');
       } else {
         touch_state.keypad_state = 'basic2';
         touch_state.cell_base_x = 0;
         touch_state.cell_base_y = 0;
-        $('.sub_key_' + k).removeClass('sub_focus');
         $('#sub_keypad_' + k).hide();
       }
     }
