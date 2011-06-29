@@ -26,6 +26,9 @@ td {
   background-color: inherit;
   border: 0;
 }
+.sub_focus {
+  background-color: #CCF;
+}
 </style>
 <script>
 var is_touch = ('ontouchstart' in window);
@@ -126,20 +129,32 @@ function TouchMove(e) {
     touch_state.current_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
     touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
     var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
+    var found = false;
+    var cell_x = 0;
+    var cell_y = 0;
     for (var x = -2; x <= 2; ++x) {
       for (var y = -2; y <= 2; ++y) {
         if (Math.sqrt(
           Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
-          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2 &&
-          !(x == prev_cell[0] && y == prev_cell[1])) {
-          touch_state.cell_sequence.push([x, y]);
+          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2) {
+          cell_x = x;
+          cell_y = y;
+          found = true;
+          break;
         }
       }
+      if (found) {
+        break;
+      }
     }
+    if (!found || (prev_cell[0] == cell_x && prev_cell[1] == cell_y)) {
+      return;
+    }
+    touch_state.cell_sequence.push([cell_x, cell_y]);
     var cur_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
     touch_state.cell_offset_x = cur_cell[0] - touch_state.cell_base_x;
     touch_state.cell_offset_y = cur_cell[1] - touch_state.cell_base_y;
-    var index =ToIndex( touch_state.cell_offset_x, touch_state.cell_offset_y);
+    var index =ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
     if ((touch_state.keypad_state == 'basic2' && index >=0 && index < 9) ||
         (touch_state.keypad_state == 'basic' && index >= 0 && index < 9 && index != 4)) {
       for (var j = 0; j < 9; ++j) {
@@ -158,12 +173,17 @@ function TouchMove(e) {
       touch_state.keypad_state = 'sub';
       touch_state.cell_base_x = cur_cell[0];
       touch_state.cell_base_y = cur_cell[1];
+      touch_state.cell_offset_x = 0;
+      touch_state.cell_offset_y = 0;
     } else if (touch_state.keypad_state == 'sub') {
       var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
-      if (kSubKeypadData[base_index][index] == '') {
+      if (kSubKeypadData[base_index][index] != '') {
+        $('#sub_' + k + '_' + index).addClass('sub_focus');
+      } else {
         touch_state.keypad_state = 'basic2';
         touch_state.cell_base_x = 0;
         touch_state.cell_base_y = 0;
+        $('.sub_key_' + k).removeClass('sub_focus');
         $('#sub_keypad_' + k).hide();
       }
     }
@@ -208,6 +228,7 @@ function TouchEnd(e) {
       }
     }
     touch_state.keypad_state = 'none';
+    $('.sub_key_' + k).removeClass('sub_focus');
     $('#sub_keypad_' + k).hide();
     $('#basic_keypad_' + k).hide();
     delete touch_states[identifier];
@@ -266,36 +287,36 @@ $(document.body).bind({
 </table>
 <table id='sub_keypad_0' style='display: none; border: none; position: absolute;'>
 <tr>
-<td id='sub_0_0'></td>
-<td id='sub_0_1'></td>
-<td id='sub_0_2'></td>
+<td id='sub_0_0' class='sub_key_0'></td>
+<td id='sub_0_1' class='sub_key_0'></td>
+<td id='sub_0_2' class='sub_key_0'></td>
 </tr>
 <tr>
-<td id='sub_0_3'></td>
-<td id='sub_0_4'></td>
-<td id='sub_0_5'></td>
+<td id='sub_0_3' class='sub_key_0'></td>
+<td id='sub_0_4' class='sub_key_0'></td>
+<td id='sub_0_5' class='sub_key_0'></td>
 </tr>
 <tr>
-<td id='sub_0_6'></td>
-<td id='sub_0_7'></td>
-<td id='sub_0_8'></td>
+<td id='sub_0_6' class='sub_key_0'></td>
+<td id='sub_0_7' class='sub_key_0'></td>
+<td id='sub_0_8' class='sub_key_0'></td>
 </tr>
 </table>
 <table id='sub_keypad_1' style='display: none; border: none; position: absolute;'>
 <tr>
-<td id='sub_1_0'></td>
-<td id='sub_1_1'></td>
-<td id='sub_1_2'></td>
+<td id='sub_1_0' class='sub_key_1'></td>
+<td id='sub_1_1' class='sub_key_1'></td>
+<td id='sub_1_2' class='sub_key_1'></td>
 </tr>
 <tr>
-<td id='sub_1_3'></td>
-<td id='sub_1_4'></td>
-<td id='sub_1_5'></td>
+<td id='sub_1_3' class='sub_key_1'></td>
+<td id='sub_1_4' class='sub_key_1'></td>
+<td id='sub_1_5' class='sub_key_1'></td>
 </tr>
 <tr>
-<td id='sub_1_6'></td>
-<td id='sub_1_7'></td>
-<td id='sub_1_8'></td>
+<td id='sub_1_6' class='sub_key_1'></td>
+<td id='sub_1_7' class='sub_key_1'></td>
+<td id='sub_1_8' class='sub_key_1'></td>
 </tr>
 </table>
 </div>
