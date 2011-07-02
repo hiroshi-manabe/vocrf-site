@@ -33,6 +33,11 @@ td {
 <script>
 var is_touch = ('ontouchstart' in window);
 var kCellSize = 320;
+var kObliqueRatio = 2;
+var kCenterStreakRatio = 1/6;
+var kIgnoreZoneRatio = 0.25;
+var kTouchZoneRatio = 0.5;
+var kLastTrackRatio = 1/6;
 var touch_states = {};
 var keypad_occupied = { 0 : false, 1 : false };
 var kSubKeypadData = [
@@ -54,8 +59,20 @@ function ToIndex(x, y) {
   return x + 1 + (y + 1) * 3;
 }
 
+function Distance(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+}
+
+function NormalizePositive(rad) {
+  var ret = rad % (Math.PI * 2);
+  if (ret < 0) {
+    ret += Math.PI * 2;
+  }
+  return ret;
+}
+
 function trace(str) {
-     $('#dump_area').text($('#dump_area').text() + ' ' + str);
+  $('#dump_area').text($('#dump_area').text() + ' ' + str);
 }
 
 function TouchStart(e) {
@@ -93,15 +110,21 @@ function TouchStart(e) {
     var k = touch_state.keypad_num;
 
     touch_state.touched = true;
-    touch_state.cell_sequence = [[0, 0]];
     touch_state.start_x = (is_touch ? event.changedTouches[i].pageX : e.pageX);
     touch_state.start_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
     $('#basic_keypad_' + k).css('top', touch_state.start_y - $('#basic_keypad_' + k).height() / 2)
                            .css('left', touch_state.start_x - $('#basic_keypad_' + k).width() / 2)
                            .show();
+    touch_state.cell_sequence = [[0, 0]];
+    touch_state.coord_sequence = [[touch_state.start_x, touch_state.start_y]];
     touch_state.cell_base_x = 0;
     touch_state.cell_base_y = 0;
+    touch_state.cell_offset_x = 0;
+    touch_state.cell_offset_y = 0;
+    touch_state.real_cell_x = 0;
+    touch_state.real_cell_y = 0;
     touch_state.keypad_state = 'basic';
+    touch_state.move_state = 'first';
   }
 }
 
@@ -130,30 +153,157 @@ function TouchMove(e) {
     touch_state.current_y = (is_touch ? event.changedTouches[i].pageY : e.pageY);
     var prev_cell = touch_state.cell_sequence[touch_state.cell_sequence.length - 1];
     var found = false;
+    var is_inside = false;
+    var diff_x = touch_state.current_x - touch_state.start_x;
+    var diff_y = touch_state.current_y - touch_state.start_y;
+    var distance = Distance(diff_x, diff_y);
     var cell_x = 0;
     var cell_y = 0;
+
+    if (touch_state.move_state == 'first') {
+      is_inside = true;
+      if (distance < kCellSize / 2) {
+        cell_x = 0;
+        cell_y = 0;
+      } else if (distance > kCellSize * 5 / 2) {
+        is_inside = false;
+      } else {
+        touch_state.rad = Math.atan2(diff_y, diff_x);
+        var rad = touch_state.rad;
+        var straight_rad = (Math.PI / 2) / (1 + kObliqueRatio) * 1;
+        var oblique_rad = (Math.PI / 2) / (1 + kObliqueRatio) * kObliqueRatio;
+        rad = NormalizePositive(rad + straight_rad / 2);
+        var rad_index = Math.floor(rad / (Math.PI / 2));
+        var cell_index = rad_index * 2;
+        if (rad - rad_index * (Math.PI / 2) > straight_rad) {
+          ++cell_index;
+        }
+        var coord = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]][cell_index];
+        cell_x = coord[0];
+        cell_y = coord[1];
+        touch_state.first_cell_x = cell_x;
+        touch_state.first_cell_y = cell_y;
+        touch_state.move_state = 'second';
+        found = true;
+      }
+    } else if (touch_state.move_state == 'second') {
+      is_inside = true;
+      var moved = false;
+      var rad = touch_state.rad;
+      var rotated_x = diff_x * Math.cos(rad) + diff_y * Math.sin(rad);
+      var rotated_y = -diff_x * Math.sin(rad) + diff_y * Math.cos(rad);
+      var deviation = Math.abs(rotated_y);
+      if (deviation < kCellSize * kCenterStreakRatio / 2) {
+        found = true;
+        if (distance < kCellSize / 2) {
+          cell_x = 0;
+          cell_y = 0;
+          moved = true;
+        } else if (distance < kCellSize * 3 / 2) {
+          cell_x = touch_state.first_cell_x;
+          cell_y = touch_state.first_cell_y;
+        } else if (distance < kCellSize * 5 / 2) {
+          cell_x = touch_state.first_cell_x * 2;
+          cell_y = touch_state.first_cell_y * 2;
+          moved = true;
+        } else {
+          is_inside = false;
+          found = false;
+        }
+      } else if (deviation < kCellSize * kIgnoreZoneRatio) {
+        found = false;
+      } else if (deviation < kCellSize * kTouchZoneRatio) {
+        var j;
+        for (j = touch_state.coord_sequence.length - 1; j >= 0; --j) {
+          if (Distance(touch_state.current_x - touch_state.coord_sequence[j][0],
+                       touch_state.current_y - touch_state.coord_sequence[j][1]) >
+             kCellSize * kLastTrackRatio) {
+            break;
+          }
+        }
+        var move_x = touch_state.current_x - touch_state.coord_sequence[j][0];
+        var move_y = touch_state.current_y - touch_state.coord_sequence[j][1];
+        var move_rad = Math.atan2(move_y, move_x);
+        var rad_rotated = NormalizePositive(move_rad - rad + Math.PI * 1 / 8);
+        var cell_index = Math.floor(rad_rotated / (Math.PI / 4));
+        var first_cell_rad = Math.atan2(touch_state.first_cell_y, touch_state.first_cell_x);
+        var cell_list;
+        if (touch_state.first_cell_x != 0 && touch_state.first_cell_y != 0) {
+          first_cell_rad -= Math.PI / 4;
+          cell_list = [null, [0, 1], [-1, 1], [-1, 0], null, [0, -1], [1, -1], [1, 0], null];
+        } else {
+          cell_list = [null, [1, 1], [0, 1], [-1, 1], null, [-1, -1], [0, -1], [1, -1], null];
+        }
+        if (cell_list) {
+          var cell_tmp = cell_list[cell_index];
+          if (cell_tmp) {
+            cell_x = touch_state.first_cell_x +
+                     Math.round(cell_tmp[0] * Math.cos(first_cell_rad) -
+                                cell_tmp[1] * Math.sin(first_cell_rad));
+            cell_y = touch_state.first_cell_y +
+                     Math.round(cell_tmp[0] * Math.sin(first_cell_rad) +
+                                cell_tmp[1] * Math.cos(first_cell_rad));
+            found = true;
+            moved = true;
+          }
+        }
+        if (moved) {
+          touch_state.move_state = 'third';
+          touch_state.second_x = touch_state.current_x;
+          touch_state.second_y = touch_state.current_y;
+        }
+      } else {
+        is_inside = false;
+      }
+      if (!is_inside) {
+        touch_state.move_state = 'free';
+      }
+    } else if (touch_state.move_state == 'third') {
+      if (Distance(touch_state.current_x - touch_state.second_x,
+                   touch_state.current_y - touch_state.second_y) < kCellSize) {
+        is_inside = true;
+      } else {
+        touch_state.move_state = 'free';
+      }
+    }
+
+    touch_state.coord_sequence.push([touch_state.current_x, touch_state.current_y]);
+
+    var real_cell_x;
+    var real_cell_y;
+    var real_cell_found = false;
     for (var x = -2; x <= 2; ++x) {
       for (var y = -2; y <= 2; ++y) {
-        if (Math.sqrt(
-          Math.pow(touch_state.current_x - (touch_state.start_x + x * kCellSize), 2) +
-          Math.pow(touch_state.current_y - (touch_state.start_y + y * kCellSize), 2)) < kCellSize / 2) {
-          cell_x = x;
-          cell_y = y;
-          found = true;
+        if (Distance(diff_x - x * kCellSize, diff_y - y * kCellSize) < kCellSize / 2) {
+          real_cell_x = x;
+          real_cell_y = y;
+          real_cell_found = true;
           break;
         }
       }
-      if (found) {
+      if (real_cell_found) {
         break;
       }
     }
-    if (!found || (prev_cell[0] == cell_x && prev_cell[1] == cell_y)) {
+
+    if (!is_inside && !(touch_state.real_cell_x == real_cell_x &&
+                    touch_state.real_cell_y == real_cell_y)) {
+      found = true;
+      cell_x = real_cell_x;
+      cell_y = real_cell_y;
+    }
+
+    touch_state.real_cell_x = real_cell_x;
+    touch_state.real_cell_y = real_cell_y;
+    
+    if (!found) {
       return;
     }
+
     touch_state.cell_sequence.push([cell_x, cell_y]);
     touch_state.cell_offset_x = cell_x - touch_state.cell_base_x;
     touch_state.cell_offset_y = cell_y - touch_state.cell_base_y;
-    var index =ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
+    var index = ToIndex(touch_state.cell_offset_x, touch_state.cell_offset_y);
 
     if (touch_state.keypad_state == 'sub') {
       var base_index = ToIndex(touch_state.cell_base_x, touch_state.cell_base_y);
