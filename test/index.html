@@ -196,6 +196,7 @@ function TouchMove(e) {
       var is_oblique = touch_state.first_cell_x != 0 && touch_state.first_cell_y != 0;
       if (is_oblique) {
          distance /= Math.sqrt(2);
+         deviation /= 1.2;
       }
 
       if (deviation < kCellSize * kCenterStreakRatio / 2) {
