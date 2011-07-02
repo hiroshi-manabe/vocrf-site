@@ -193,6 +193,12 @@ function TouchMove(e) {
       var rotated_x = diff_x * Math.cos(rad) + diff_y * Math.sin(rad);
       var rotated_y = -diff_x * Math.sin(rad) + diff_y * Math.cos(rad);
       var deviation = Math.abs(rotated_y);
+      var is_oblique = touch_state.first_cell_x != 0 && touch_state.first_cell_y != 0;
+      if (is_oblique) {
+         deviation /= Math.sqrt(2);
+         distance /= Math.sqrt(2);
+      }
+
       if (deviation < kCellSize * kCenterStreakRatio / 2) {
         found = true;
         if (distance < kCellSize / 2) {
@@ -228,7 +234,7 @@ function TouchMove(e) {
         var cell_index = Math.floor(rad_rotated / (Math.PI / 4));
         var first_cell_rad = Math.atan2(touch_state.first_cell_y, touch_state.first_cell_x);
         var cell_list;
-        if (touch_state.first_cell_x != 0 && touch_state.first_cell_y != 0) {
+        if (is_oblique) {
           first_cell_rad -= Math.PI / 4;
           cell_list = [null, [0, 1], [-1, 1], [-1, 0], null, [0, -1], [1, -1], [1, 0], null];
         } else {
