@@ -195,7 +195,6 @@ function TouchMove(e) {
       var deviation = Math.abs(rotated_y);
       var is_oblique = touch_state.first_cell_x != 0 && touch_state.first_cell_y != 0;
       if (is_oblique) {
-         deviation /= Math.sqrt(2);
          distance /= Math.sqrt(2);
       }
 
