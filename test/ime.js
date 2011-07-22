@@ -458,8 +458,7 @@ function AjaxIME(doc) {
   function ImeShowCandidates() {
     if (!ImeIsHidden()) return;
     if (ImeRawInput_ == '') ImeRawInput_ = roma2hiragana(ImePreEdit_.value, false);
-    var request = "action=conv&to=" + ImeTo_ + "&query=" + encodeURI(ImeRawInput_) +
-      "&id=" + ImeID_;
+    var request = "?" + encodeURI(ImeRawInput_)
     ImeCurrentDocument_ = ImeDocument_;
     // alert('sending jsonp :'+ImeRawInput_)
     ImeJsonp_ = new JSONRequest(ImeCGI_ + request);
