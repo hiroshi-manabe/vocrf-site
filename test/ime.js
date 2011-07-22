@@ -429,9 +429,7 @@ function AjaxIME(doc) {
   function ImeLog(result) {
     if (ImeRawInput_ == '') ImeRawInput_ = result;
     if (ImeSelectedIndex_ >= 1) ImeCache_[ImeRawInput_] = result;
-    var request = "action=log&query=" + encodeURI(ImeRawInput_) + 
-      "&result=" + encodeURI(result) + "&sel=" + ImeSelectedIndex_ +
-      "&id=" + ImeID_;
+    var request = "?" + encodeURI(ImeRawInput_);
     ImeJsonpLog_ = new JSONRequest(ImeCGI_ + request);
     ++ImeID_;
   }
