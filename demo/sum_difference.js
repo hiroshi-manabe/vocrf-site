@@ -6,6 +6,7 @@ function inherit(subClass, superClass) {
 	subClass.prototype.superclass = superClass.prototype;
 }
 
+
 function reprTuple(array)
 {
 	var resultArray = [];
@@ -558,7 +559,7 @@ DataSet.prototype.sumDifference = function(sequence) {
 			var prevPath = path.getPrevPath();
 			var longestSuffix = path.getLongestSuffix();
 			longestSuffix.setAlpha(longestSuffix.getAlpha() - prevPath.getGamma());
-			path.setAlpha(path.getAlpha() + prevPath.getGamma());
+			path.setAlpha((path.getAlpha() + prevPath.getGamma()) * path.getW());
 			path.highlightAll();
 			yield 1;
 			path.unhighlightAll();
@@ -569,7 +570,7 @@ DataSet.prototype.sumDifference = function(sequence) {
 		for (var i = paths[sequencePos].length - 1; i >= 1; i--) {
 			var path = paths[sequencePos][i];
 			var longestSuffix = path.getLongestSuffix();
-			path.setGamma(path.getGamma() + path.getAlpha() * path.getW());
+			path.setGamma(path.getGamma() + path.getAlpha());
 			longestSuffix.setGamma(longestSuffix.getGamma() + path.getGamma());
 			path.highlightThisAndLongestSuffix();
 			yield 1;
@@ -609,7 +610,7 @@ DataSet.prototype.sumDifference = function(sequence) {
 		for (var i = paths[sequencePos].length - 1; i >= 1; i--) {
 			var path = paths[sequencePos][i];
 			var longestSuffix = path.getLongestSuffix();
-			path.setSigma(path.getSigma() + path.getAlpha() * path.getBeta() * path.getW());
+			path.setSigma(path.getSigma() + path.getAlpha() * path.getBeta());
 			longestSuffix.setSigma(longestSuffix.getSigma() + path.getSigma());
 			path.highlightThisAndLongestSuffix();
 			yield 1;
