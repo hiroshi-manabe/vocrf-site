@@ -6,6 +6,7 @@ function inherit(subClass, superClass) {
 	subClass.prototype.superclass = superClass.prototype;
 }
 
+
 function reprTuple(array)
 {
 	var resultArray = [];
