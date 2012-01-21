@@ -96,7 +96,7 @@
     localStorage.count = count;
     localStorage.correct_count = correct_count;
     localStorage.missed = missed;
-    ++count;
+    count = (count + 1) % data.length;
   }
 
   function button_touch(page, num) {
