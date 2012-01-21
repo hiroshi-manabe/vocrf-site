@@ -76,7 +76,9 @@
   function next_question() {
     $("#footer0,#footer1").text("" + correct_count + "/" + (count + (missed ? 1 : 0)));
     correct_one = mt.nextInt(0, option_count);
-    $("#title" + cur_page).text(data[count][0]);
+    var source = is_reversed ? 1 : 0;
+    var dest = is_reversed ? 0 : 1;
+    $("#title" + cur_page).text(data[count][source]);
     used_dict = {};
     used_dict[count] = true;
     for (var i = 0; i < option_count; ++i) {
@@ -88,9 +90,9 @@
         break;
       }
       used_dict[r] = true;
-      $("#option_" + cur_page + "_" + i).text(data[r][1]);
+      $("#option_" + cur_page + "_" + i).text(data[r][dest]);
     }
-    $("#option_" + cur_page + "_" + correct_one).text(data[count][1]);
+    $("#option_" + cur_page + "_" + correct_one).text(data[count][dest]);
     localStorage.count = count;
     localStorage.correct_count = correct_count;
     localStorage.missed = missed;
