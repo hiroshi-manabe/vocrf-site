@@ -2,11 +2,12 @@
 <html> 
   <head> 
   <meta charset="UTF-8">
-  <title>jQuery Mobile Sample</title> 
+  <title>Spanish word quiz</title> 
   <meta name="viewport" content="width=device-width, initial-scale=1,minimum-scale=1, maximum-scale=1"> 
   <link rel="stylesheet" href="jquery.mobile-1.0.min.css" />
   <script src="jquery-1.7.1.min.js"></script>
   <script src="data.js"></script>
+  <script src="mt.js"></script>
   <script>
   $(document).bind("mobileinit", function() {
     $.mobile.page.prototype.options.addBackBtn = true;
@@ -16,22 +17,73 @@
   var cur_page = 0;
   var correct_one;
   var option_count = 2;
+  var is_reversed = false;
+  var is_random = false;
+  var random_seed = (new Date()).getTime();
+  var mt = new MersenneTwister(random_seed);
+  var missed;
+
+  Array.prototype.shuffle_fy = function() {
+    var i = this.length;
+    while(i){
+      var j = mt.nextInt(0, i);
+      var t = this[--i];
+      this[i] = this[j];
+      this[j] = t;
+    }
+    return this;
+  }
 
   $(function(){
-    count = 0;
-    correct_count = 0;
-    next_question();
+    if (!localStorage.has_data) {
+      document.location.hash = "#select_direction";
+    } else {
+      document.location.hash = "#index";
+    }
   })
 
+  function continue_game() {
+    count = parseInt(localStorage.count);
+    correct_count = parseInt(localStorage.correct_count);
+    is_reversed = (localStorage.is_reversed == "true");
+    is_random = (localStorage.is_random == "true");
+    random_seed = parseInt(localStorage.random_seed);
+    mt = new MersenneTwister(random_seed);
+    missed = (localStorage.missed == "true");
+    if (is_random) {
+      data.shuffle_fy();
+    }
+    next_question();
+  }
+
+  function start_game() {
+    count = 0;
+    correct_count = 0;
+    missed = false;
+    localStorage.has_data = true;
+    localStorage.count = count;
+    localStorage.correct_count = correct_count;
+    localStorage.is_reversed = is_reversed;
+    localStorage.is_random = is_random;
+    localStorage.random_seed = random_seed;
+    localStorage.missed = missed;
+    if (is_random) {
+      data.shuffle_fy();
+    }
+    next_question();
+  }
+
   function next_question() {
-    correct_one = Math.floor(Math.random() * option_count);
+    $("#footer0,#footer1").text("" + correct_count + "/" + (count + (missed ? 1 : 0)));
+    correct_one = mt.nextInt(0, option_count);
     $("#title" + cur_page).text(data[count][0]);
     used_dict = {};
     used_dict[count] = true;
     for (var i = 0; i < option_count; ++i) {
       var r;
       while (true) {
-        r = Math.floor(Math.random() * data.length);
+        r = mt.nextInt(0, data.length);
+        if (data[r][2] != data[count][2]) continue;
         if (used_dict[r]) continue;
         break;
       }
@@ -39,18 +91,32 @@
       $("#option_" + cur_page + "_" + i).text(data[r][1]);
     }
     $("#option_" + cur_page + "_" + correct_one).text(data[count][1]);
+    localStorage.count = count;
+    localStorage.correct_count = correct_count;
+    localStorage.missed = missed;
     ++count;
   }
-  function button_touch(num) {
-    if (num == correct_one) {
-      var elem = $("#li_" + cur_page + "_" + num);
-      elem.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-      ++correct_count;
+
+  function button_touch(page, num) {
+    if (page != cur_page) {
+      return;
     }
-    $("#footer0,#footer1").text("" + correct_count + "/" + count);
+    elem = $("#option_" + cur_page + "_" + num);
+    elem.text(elem.text() + " " + (num == correct_one ? "◯" : "×"));
+
     cur_page = 1 - cur_page;
+    if (num == correct_one) {
+      if (!missed) {
+        ++correct_count;
+      }
+      missed = false;
+    } else {
+      missed = true;
+      --count;
+    }
     next_question();
   }
+
   </script>
   <style>
   .big { font-size: 300%; }
@@ -58,14 +124,62 @@
   <script src="jquery.mobile-1.0.min.js"></script>
 </head>
 <body>
+  <div data-role="page" id="index" data-theme="b">
+    <div data-role="content">
+      <ul data-role="listview" data-inset="true">
+        <li data-role="list-divider"><span class="big">スペイン語単語帳</span></li>
+        <li><a href="#select_direction">
+          <h3>はじめから</h3>
+        </a></li>
+        <li id="continue_game" onclick="continue_game();"><a href="#page0">
+          <h3>つづきから</h3>
+        </a></li>
+      </ul>
+    </div>
+    <div data-role="footer">
+      <h3><span id="footer0"></span></h4>
+    </div>
+  </div>
+  <div data-role="page" id="select_direction" data-theme="b">
+    <div data-role="content">
+      <ul data-role="listview" data-inset="true">
+        <li data-role="list-divider"><span class="big">出題方向</span></li>
+        <li><a href="#select_type">
+          <h3>西→日</h3>
+        </a></li>
+        <li onclick="is_reversed=true;"><a href="#select_type">
+          <h3>日→西</h3>
+        </a></li>
+      </ul>
+    </div>
+    <div data-role="footer">
+      <h3><span id="footer0"></span></h4>
+    </div>
+  </div>
+  <div data-role="page" id="select_type" data-theme="b">
+    <div data-role="content">
+      <ul data-role="listview" data-inset="true">
+        <li data-role="list-divider"><span class="big">出題順</span></li>
+        <li><a onclick="start_game();" href="#page0">
+          <h3>リスト順</h3>
+        </a></li>
+        <li onclick="is_random=true;start_game();"><a href="#page0">
+          <h3>ランダム</h3>
+        </a></li>
+      </ul>
+    </div>
+    <div data-role="footer">
+      <h3><span id="footer0"></span></h4>
+    </div>
+  </div>
   <div data-role="page" id="page0" data-theme="b">
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title0" class="big"></span></li>
-        <li id="li_0_0" onclick="button_touch(0);"><a href="#page1">
+        <li id="li_0_0" onclick="button_touch(0, 0);"><a href="#page1">
           <h3 id="option_0_0"></h3>
         </a></li>
-        <li id="li_0_1" onclick="button_touch(1);"><a href="#page1">
+        <li id="li_0_1" onclick="button_touch(0, 1);"><a href="#page1">
           <h3 id="option_0_1"></h3>
         </a></li>
       </ul>
@@ -78,10 +192,10 @@
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title1" class="big"></span></li>
-        <li id="li_1_0" onclick="button_touch(0);"><a href="#page0">
+        <li id="li_1_0" onclick="button_touch(1, 0);"><a href="#page0">
           <h3 id="option_1_0"></h3>
         </a></li>
-        <li id="li_1_1" onclick="button_touch(1);"><a href="#page0">
+        <li id="li_1_1" onclick="button_touch(1, 1);"><a href="#page0">
           <h3 id="option_1_1"></h3>
         </a></li>
       </ul>
