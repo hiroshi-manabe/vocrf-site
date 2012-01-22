@@ -96,7 +96,11 @@
     localStorage.count = count;
     localStorage.correct_count = correct_count;
     localStorage.missed = missed;
-    count = (count + 1) % data.length;
+    ++count;
+    if (count == data.length) {
+      count = 0;
+      correct_count = 0;
+    }
   }
 
   function button_touch(page, num) {
@@ -122,6 +126,9 @@
   </script>
   <style>
   .big { font-size: 300%; }
+  .in, .out {
+    -webkit-animation-duration: 250ms;
+  }
   </style>
   <script src="jquery.mobile-1.0.min.js"></script>
 </head>
