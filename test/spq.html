@@ -86,7 +86,7 @@
   }
 
   function next_question() {
-    $("#footer0,#footer1").text("" + correct_count + "/" + (count + (missed ? 1 : 0)));
+    $("#header0,#header1").text("" + correct_count + "/" + (count + (missed ? 1 : 0)));
     correct_one = mt.nextInt(0, option_count);
     var source = is_reversed ? 1 : 0;
     var dest = is_reversed ? 0 : 1;
@@ -160,9 +160,6 @@
         </a></li>
       </ul>
     </div>
-    <div data-role="footer">
-      <h3></h3>
-    </div>
   </div>
   <div data-role="page" id="select_direction" data-theme="b">
     <div data-role="header">
@@ -178,9 +175,6 @@
           <h3>日→西</h3>
         </a></li>
       </ul>
-    </div>
-    <div data-role="footer">
-      <h3></h3>
     </div>
   </div>
   <div data-role="page" id="select_type" data-theme="b">
@@ -198,14 +192,11 @@
         </a></li>
       </ul>
     </div>
-    <div data-role="footer">
-      <h3></h3>
-    </div>
   </div>
   <div data-role="page" id="page0" data-theme="b">
     <div data-role="header">
       <a href="#index" data-direction="reverse">メニュー</a>
-      <h3>単語帳</h3>
+      <h3 id="header0"></h3>
     </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
@@ -224,14 +215,11 @@
         </a></li>
       </ul>
     </div>
-    <div data-role="footer">
-      <h3><span id="footer0"></span></h3>
-    </div>
   </div>
   <div data-role="page" id="page1" data-theme="b">
     <div data-role="header">
       <a href="#index" data-direction="reverse">メニュー</a>
-      <h3>単語帳</h3>
+      <h3 id="header1"></h3>
     </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
@@ -249,9 +237,6 @@
           <h3 id="option_1_1"></h3>
         </a></li>
       </ul>
-    </div>
-    <div data-role="footer">
-      <h3><span id="footer1"></span></h3>
     </div>
   </div>
 </body>
