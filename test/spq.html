@@ -16,6 +16,7 @@
   var correct_count;
   var cur_page = 0;
   var correct_one;
+  var max_option_count = 4;
   var option_count = 2;
   var is_reversed = false;
   var is_random = false;
@@ -42,7 +43,16 @@
     }
   })
 
+  function init_options() {
+    for (var i = 0; i < 2; ++i) {
+      for (var j = option_count; j < max_option_count; ++j) {
+        $("#li_" + i + "_" + j).hide();
+      }
+    }
+  }
+
   function continue_game() {
+    init_options();
     count = parseInt(localStorage.count);
     correct_count = parseInt(localStorage.correct_count);
     is_reversed = (localStorage.is_reversed == "true");
@@ -50,6 +60,7 @@
     random_seed = parseInt(localStorage.random_seed);
     mt = new MersenneTwister(random_seed);
     missed = (localStorage.missed == "true");
+    cur_page = 0;
     if (is_random) {
       data.shuffle_fy();
     }
@@ -57,6 +68,7 @@
   }
 
   function start_game() {
+    init_options();
     count = 0;
     correct_count = 0;
     missed = false;
@@ -134,9 +146,12 @@
 </head>
 <body>
   <div data-role="page" id="index" data-theme="b">
+    <div data-role="header">
+      <h3>単語帳</h3>
+    </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
-        <li data-role="list-divider"><span class="big">スペイン語単語帳</span></li>
+        <li data-role="list-divider"><span class="big">メニュー</span></li>
         <li><a href="#select_direction">
           <h3>はじめから</h3>
         </a></li>
@@ -146,14 +161,17 @@
       </ul>
     </div>
     <div data-role="footer">
-      <h3><span id="footer0"></span></h4>
+      <h3></h3>
     </div>
   </div>
   <div data-role="page" id="select_direction" data-theme="b">
+    <div data-role="header">
+      <h3>単語帳</h3>
+    </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">出題方向</span></li>
-        <li><a href="#select_type">
+        <li onclick="is_reversed=false;"><a href="#select_type">
           <h3>西→日</h3>
         </a></li>
         <li onclick="is_reversed=true;"><a href="#select_type">
@@ -162,14 +180,17 @@
       </ul>
     </div>
     <div data-role="footer">
-      <h3><span id="footer0"></span></h4>
+      <h3></h3>
     </div>
   </div>
   <div data-role="page" id="select_type" data-theme="b">
+    <div data-role="header">
+      <h3>単語帳</h3>
+    </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">出題順</span></li>
-        <li><a onclick="start_game();" href="#page0">
+        <li><a onclick="is_random=false;start_game();" href="#page0">
           <h3>リスト順</h3>
         </a></li>
         <li onclick="is_random=true;start_game();"><a href="#page0">
@@ -178,15 +199,25 @@
       </ul>
     </div>
     <div data-role="footer">
-      <h3><span id="footer0"></span></h4>
+      <h3></h3>
     </div>
   </div>
   <div data-role="page" id="page0" data-theme="b">
+    <div data-role="header">
+      <a href="#index" data-direction="reverse">メニュー</a>
+      <h3>単語帳</h3>
+    </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title0" class="big"></span></li>
         <li id="li_0_0" onclick="button_touch(0, 0);"><a href="#page1">
           <h3 id="option_0_0"></h3>
+        </a></li>
+        <li id="li_0_2" onclick="button_touch(0, 2);"><a href="#page1">
+          <h3 id="option_0_2"></h3>
+        </a></li>
+        <li id="li_0_3" onclick="button_touch(0, 3);"><a href="#page1">
+          <h3 id="option_0_3"></h3>
         </a></li>
         <li id="li_0_1" onclick="button_touch(0, 1);"><a href="#page1">
           <h3 id="option_0_1"></h3>
@@ -194,15 +225,25 @@
       </ul>
     </div>
     <div data-role="footer">
-      <h3><span id="footer0"></span></h4>
+      <h3><span id="footer0"></span></h3>
     </div>
   </div>
   <div data-role="page" id="page1" data-theme="b">
+    <div data-role="header">
+      <a href="#index" data-direction="reverse">メニュー</a>
+      <h3>単語帳</h3>
+    </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title1" class="big"></span></li>
         <li id="li_1_0" onclick="button_touch(1, 0);"><a href="#page0">
           <h3 id="option_1_0"></h3>
+        </a></li>
+        <li id="li_1_2" onclick="button_touch(1, 2);"><a href="#page0">
+          <h3 id="option_1_2"></h3>
+        </a></li>
+        <li id="li_1_3" onclick="button_touch(1, 3);"><a href="#page0">
+          <h3 id="option_1_3"></h3>
         </a></li>
         <li id="li_1_1" onclick="button_touch(1, 1);"><a href="#page0">
           <h3 id="option_1_1"></h3>
@@ -210,7 +251,7 @@
       </ul>
     </div>
     <div data-role="footer">
-      <h3><span id="footer1"></span></h4>
+      <h3><span id="footer1"></span></h3>
     </div>
   </div>
 </body>
