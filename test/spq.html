@@ -171,7 +171,7 @@ GameState.prototype.getOptions = function() {
   this._correct_one = this._mt.nextInt(0, this._option_count);
   ++this._random_count_temp;
   var used_dict = {};
-  used_dict[this._problem_number] = true;
+  used_dict[index[this._problem_number]] = true;
 
   var dest = this._is_reversed ? 0 : 1;
 
@@ -268,10 +268,14 @@ function init_buttons() {
 }
 
 function start_game(mode) {
-  if (!game_state.setMode(mode)) return false;
-  game_state.setCurrentPage('page0');
+  if (!game_state.setMode(mode)) {
+    $("<a href='#blacklist_empty' data-rel='dialog'; data-transition='popup'></a>").click();
+    return;
+  }
   game_state.init();
   next_question();
+  game_state.setCurrentPage('page0');
+  $.mobile.changePage("#page0");
 }
   
 function next_question() {
@@ -330,13 +334,13 @@ function button_touch(page, num) {
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">出題順</span></li>
-        <li><a onclick="start_game('list');"  href="#page0">
+        <li><a onclick="start_game('list');">
           <h3>リスト順</h3>
         </a></li>
-        <li><a onclick="start_game('random');" href="#page0"
+        <li><a onclick="start_game('random');">
           <h3>ランダム</h3>
         </a></li>
-        <li><a onclick="return start_game('blacklist');" href="#page0"
+        <li><a onclick="start_game('blacklist');">
           <h3>ブラックリスト学習</h3>
         </a></li>
       </ul>
@@ -388,6 +392,14 @@ function button_touch(page, num) {
           <h3 id="option_1_1"></h3>
         </a></li>
       </ul>
+    </div>
+  </div>
+  <div data-role="page" id="blacklist_empty" data-theme="b">
+    <div data-role="header" data-theme='b' data-position='inline'>
+      <h1>データなし</h1>
+    </div>
+    <div data-role="content">
+      ブラックリストにデータがありません。
     </div>
   </div>
 </body>
