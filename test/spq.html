@@ -9,131 +9,291 @@
   <script src="data.js"></script>
   <script src="mt.js"></script>
   <script>
-  $(document).bind("mobileinit", function() {
-    $.mobile.page.prototype.options.addBackBtn = true;
-  });
-  var count;
-  var correct_count;
-  var cur_page = 0;
-  var correct_one;
-  var max_option_count = 4;
-  var option_count = 2;
-  var is_reversed = false;
-  var is_random = false;
-  var random_seed = (new Date()).getTime();
-  var mt = new MersenneTwister(random_seed);
-  var missed;
 
-  Array.prototype.shuffle_fy = function() {
-    var i = this.length;
-    while(i){
-      var j = mt.nextInt(0, i);
-      var t = this[--i];
-      this[i] = this[j];
-      this[j] = t;
-    }
-    return this;
+$(document).bind("mobileinit", function() {
+  $.mobile.page.prototype.options.addBackBtn = true;
+});
+
+Array.prototype.clone = function() {  
+  return Array.apply(null,this)  
+}
+
+// mt: Provide Mersenne Twister random generater
+Array.prototype.shuffle = function(mt) {
+  var i = this.length;
+  while(i) {
+    var j = mt.nextInt(0, i);
+    var t = this[--i];
+    this[i] = this[j];
+    this[j] = t;
   }
+  return this;
+}
 
-  $(function(){
-    if (!localStorage.has_data) {
-      document.location.hash = "#select_direction";
-    } else {
-      document.location.hash = "#index";
+var GameState = function(data, option_count) {
+  this._problem_data = data;
+  this._index_list = null;
+  this._index_shuffled = null;
+  this._blacklist = {};
+  this._blacklist_index = [];
+  this._option_count = option_count;
+
+  this._is_reversed = false;
+  this._mode = "list";
+  this._random_seed = 0;
+  this._random_count = 0;
+  this._random_count_temp = 0;
+  this._mt = null;
+  this._problem_number = 0;
+  this._correct_count = 0;
+  this._missed = false;
+  this._current_page = "";
+
+  this._correct_one = 0;
+}
+
+GameState.prototype.setMode = function(mode) {
+  if (mode == "blacklist") {
+    var flag = false;
+    for (key in this._blacklist) {
+      flag = true;
+      break;
     }
-  })
+    if (!flag) {
+      return false;
+    }
+  }
+  this._mode = mode;
+  this.saveLocal();
+  return true;
+}
 
-  function init_options() {
-    for (var i = 0; i < 2; ++i) {
-      for (var j = option_count; j < max_option_count; ++j) {
-        $("#li_" + i + "_" + j).hide();
+GameState.prototype.setReversed = function(is_reversed) {
+  this._is_reversed = is_reversed;
+  this.saveLocal();
+}
+
+GameState.prototype.setCurrentPage = function(page) {
+  this._current_page = page;
+  this.saveLocal();
+}
+
+GameState.prototype.getCurrentPage = function() {
+  return this._current_page;
+}
+
+GameState.prototype.getCurrentPage = function() {
+  return this._current_page;
+}
+
+GameState.prototype._prepareIndex = function() {
+  this._index_list = [];
+  this._index_shuffled = [];
+  for (var i = 0; i < this._problem_data.length; ++i) {
+    this._index_list.push(i);
+    this._index_shuffled.push(i);
+  }
+  this._index_shuffled.shuffle(this._mt);
+}
+
+GameState.prototype.init = function() {
+  this._problem_number = 0;
+  this._correct_count = 0;
+  this._random_seed = (new Date()).getTime();
+  this._random_count = 0;
+  this._random_count_temp = 0;
+  this._missed = false;
+  this._mt = new MersenneTwister(this._random_seed);
+  this._prepareIndex();
+  this._blacklist_index = [];
+  for (key in this._blacklist) {
+    this._blacklist_index.push(key);
+  }
+  this.saveLocal();
+}
+
+GameState.prototype.loadLocal = function() {
+  if (localStorage.has_data != "true") return false;
+
+  this._current_page = localStorage.current_page;
+  this._problem_number = parseInt(localStorage.problem_number);
+  this._correct_count = parseInt(localStorage.correct_count);
+  this._is_reversed = (localStorage.is_reversed == "true");
+  this._mode = localStorage.mode;
+  this._missed = (localStorage.missed == "true");
+  this._random_seed = parseInt(localStorage.random_seed)
+  this._random_count = parseInt(localStorage.random_count);
+  this._random_count_temp = this._random_count;
+  this._mt = new MersenneTwister(this._random_seed);
+  this._prepareIndex();
+  this._blacklist = JSON.parse(localStorage.blacklist);
+  this._blacklist_index = JSON.parse(localStorage.blacklist_index);
+
+  for (var i = 0; i < this._random_count; ++i) {
+    this._mt.nextInt(0, 2);
+  }
+  return true;
+}
+
+GameState.prototype.saveLocal = function() {
+  localStorage.has_data = "true";
+  localStorage.current_page = this._current_page;
+  localStorage.problem_number = this._problem_number;
+  localStorage.correct_count = this._correct_count;
+  localStorage.is_reversed = this._is_reversed;
+  localStorage.mode = this._mode;
+  localStorage.random_seed = this._random_seed;
+  localStorage.random_count = this._random_count;
+  localStorage.missed = this._missed;
+  localStorage.blacklist = JSON.stringify(this._blacklist);
+  localStorage.blacklist_index = JSON.stringify(this._blacklist_index);
+}
+
+GameState.prototype.getIndex = function() {
+  switch (this._mode) {
+  case 'random':
+    return this._index_shuffled;
+  case 'blacklist':
+    return this._blacklist_index;
+  default:
+    return this._index_list;
+  }  
+}
+
+GameState.prototype.getProblem = function() {
+  var source = this._is_reversed ? 1 : 0;
+  return this._problem_data[(this.getIndex())[this._problem_number]][source];
+}
+
+GameState.prototype.getOptions = function() {
+  var options = [];
+  var index = this.getIndex();
+  this._correct_one = this._mt.nextInt(0, this._option_count);
+  ++this._random_count_temp;
+  var used_dict = {};
+  used_dict[this._problem_number] = true;
+
+  var dest = this._is_reversed ? 0 : 1;
+
+  for (var i = 0; i < this._option_count; ++i) {
+    var r;
+    while (true) {
+      r = this._mt.nextInt(0, this._problem_data.length);
+      ++this._random_count_temp;
+      if (this._problem_data[r][2] !=
+          this._problem_data[index[this._problem_number]][2]) {
+        continue;
       }
+      if (used_dict[r]) continue;
+      break;
+    }
+    used_dict[r] = true;
+    options[i] = this._problem_data[r][dest];
+  }
+  options[this._correct_one] = this._problem_data[index[this._problem_number]][dest];
+  return options;
+}
+
+GameState.prototype.giveAnswer = function(answer) {
+  var blacklist_offset = 0;
+
+  if (answer == this._correct_one) {
+    if (!this._missed) {
+      ++this._correct_count;
+      blacklist_offset = -1;
+    }
+    this._missed = false;
+  } else {
+    if (!this._missed) {
+      this._missed = true;
+      blacklist_offset = 1;
+    }
+  }
+  
+  var index = (this.getIndex())[this._problem_number];
+  if (index in this._blacklist || blacklist_offset > 0) {
+    this._blacklist[index] = (index in this._blacklist ? this._blacklist[index] :
+                                                         0) + blacklist_offset;
+    if (this._blacklist[index] <= 0) {
+      delete this._blacklist[index];
     }
   }
 
-  function continue_game() {
-    init_options();
-    count = parseInt(localStorage.count);
-    correct_count = parseInt(localStorage.correct_count);
-    is_reversed = (localStorage.is_reversed == "true");
-    is_random = (localStorage.is_random == "true");
-    random_seed = parseInt(localStorage.random_seed);
-    mt = new MersenneTwister(random_seed);
-    missed = (localStorage.missed == "true");
-    cur_page = 0;
-    if (is_random) {
-      data.shuffle_fy();
-    }
-    next_question();
+  if (!this._missed) {
+    ++this._problem_number;
   }
 
-  function start_game() {
-    init_options();
-    count = 0;
-    correct_count = 0;
-    missed = false;
-    localStorage.has_data = true;
-    localStorage.count = count;
-    localStorage.correct_count = correct_count;
-    localStorage.is_reversed = is_reversed;
-    localStorage.is_random = is_random;
-    localStorage.random_seed = random_seed;
-    localStorage.missed = missed;
-    if (is_random) {
-      data.shuffle_fy();
-    }
-    next_question();
+  if (this._problem_number >= this.getIndex().length) {
+    this._problem_number = 0;
+    this._correct_count = 0;
   }
 
-  function next_question() {
-    $("#header0,#header1").text("" + correct_count + "/" + (count + (missed ? 1 : 0)));
-    correct_one = mt.nextInt(0, option_count);
-    var source = is_reversed ? 1 : 0;
-    var dest = is_reversed ? 0 : 1;
-    $("#title" + cur_page).text(data[count][source]);
-    used_dict = {};
-    used_dict[count] = true;
-    for (var i = 0; i < option_count; ++i) {
-      var r;
-      while (true) {
-        r = mt.nextInt(0, data.length);
-        if (data[r][2] != data[count][2]) continue;
-        if (used_dict[r]) continue;
-        break;
-      }
-      used_dict[r] = true;
-      $("#option_" + cur_page + "_" + i).text(data[r][dest]);
+  this._random_count = this._random_count_temp;
+  this.saveLocal();
+  return this._correct_one;
+}
+
+GameState.prototype.getStatusString = function() {
+  return this._correct_count + "/" + (this._problem_number + (this._missed ? 1 : 0));
+}
+
+var max_option_count = 4;
+var option_count = 2;
+
+// "data" should be provided as an array by an external script
+var game_state = new GameState(data, option_count);
+var cur_page = 0;
+
+$(function() {
+  init_buttons();
+  if (game_state.loadLocal()) {
+    var page = game_state.getCurrentPage().replace(/[^a-z0-9_]/g, "");
+    if (page == "page0") {
+      next_question();
     }
-    $("#option_" + cur_page + "_" + correct_one).text(data[count][dest]);
-    localStorage.count = count;
-    localStorage.correct_count = correct_count;
-    localStorage.missed = missed;
-    ++count;
-    if (count == data.length) {
-      count = 0;
-      correct_count = 0;
+    document.location.hash = "#" + page;
+  } else {
+    game_state.setCurrentPage("index");
+    document.location.hash = "#index";
+    game_state.saveLocal();
+  }
+})
+
+function init_buttons() {
+  for (var i = 0; i < 2; ++i) {
+    for (var j = option_count; j < max_option_count; ++j) {
+      $("#li_" + i + "_" + j).hide();
     }
   }
+}
 
-  function button_touch(page, num) {
-    if (page != cur_page) {
-      return;
-    }
-    elem = $("#option_" + cur_page + "_" + num);
-    elem.text(elem.text() + " " + (num == correct_one ? "◯" : "×"));
-
-    cur_page = 1 - cur_page;
-    if (num == correct_one) {
-      if (!missed) {
-        ++correct_count;
-      }
-      missed = false;
-    } else {
-      missed = true;
-      --count;
-    }
-    next_question();
+function start_game(mode) {
+  if (!game_state.setMode(mode)) return false;
+  game_state.setCurrentPage('page0');
+  game_state.init();
+  next_question();
+}
+  
+function next_question() {
+  $("#header0,#header1").text(game_state.getStatusString());
+  $("#title" + cur_page).text(game_state.getProblem());
+  var options = game_state.getOptions();
+  for (var i = 0; i < options.length; ++i) {
+    $("#option_" + cur_page + "_" + i).text(options[i]);
   }
+}
+
+function button_touch(page, num) {
+  if (page != cur_page) {
+    return;
+  }
+  var correct_one = game_state.giveAnswer(num);
+  elem = $("#option_" + cur_page + "_" + num);
+  elem.text(elem.text() + " " + (num == correct_one ? "◯" : "×"));
+
+  cur_page = 1 - cur_page;
+  next_question();
+}
 
   </script>
   <style>
@@ -145,33 +305,19 @@
   <script src="jquery.mobile-1.0.min.js"></script>
 </head>
 <body>
-  <div data-role="page" id="index" data-theme="b">
+  <div data-role="page" id="index" data-theme="b" data-backbtn="false">
     <div data-role="header">
       <h3>単語帳</h3>
     </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">メニュー</span></li>
-        <li><a href="#select_direction">
-          <h3>はじめから</h3>
-        </a></li>
-        <li id="continue_game" onclick="continue_game();"><a href="#page0">
-          <h3>つづきから</h3>
-        </a></li>
-      </ul>
-    </div>
-  </div>
-  <div data-role="page" id="select_direction" data-theme="b">
-    <div data-role="header">
-      <h3>単語帳</h3>
-    </div>
-    <div data-role="content">
-      <ul data-role="listview" data-inset="true">
-        <li data-role="list-divider"><span class="big">出題方向</span></li>
-        <li onclick="is_reversed=false;"><a href="#select_type">
+        <li onclick="game_state.setReversed(false);game_state.setCurrentPage('select_type');">
+	  <a href="#select_type">
           <h3>西→日</h3>
         </a></li>
-        <li onclick="is_reversed=true;"><a href="#select_type">
+        <li onclick="game_state.setReversed(true);game_state.setCurrentPage('select_type');">
+	  <a href="#select_type">
           <h3>日→西</h3>
         </a></li>
       </ul>
@@ -184,18 +330,22 @@
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">出題順</span></li>
-        <li><a onclick="is_random=false;start_game();" href="#page0">
+        <li><a onclick="start_game('list');"  href="#page0">
           <h3>リスト順</h3>
         </a></li>
-        <li onclick="is_random=true;start_game();"><a href="#page0">
+        <li><a onclick="start_game('random');" href="#page0"
           <h3>ランダム</h3>
+        </a></li>
+        <li><a onclick="return start_game('blacklist');" href="#page0"
+          <h3>ブラックリスト学習</h3>
         </a></li>
       </ul>
     </div>
   </div>
   <div data-role="page" id="page0" data-theme="b">
     <div data-role="header">
-      <a href="#index" data-direction="reverse">メニュー</a>
+      <a href="#index" onclick="game_state.setCurrentPage('index');" data-direction="reverse">
+	メニュー</a>
       <h3 id="header0"></h3>
     </div>
     <div data-role="content">
@@ -218,7 +368,8 @@
   </div>
   <div data-role="page" id="page1" data-theme="b">
     <div data-role="header">
-      <a href="#index" data-direction="reverse">メニュー</a>
+      <a href="#index" onclick="game_state.setCurrentPage('index');" data-direction="reverse">
+	メニュー</a>
       <h3 id="header1"></h3>
     </div>
     <div data-role="content">
