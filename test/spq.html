@@ -5,10 +5,8 @@
   <title>Spanish word quiz</title> 
   <meta name="viewport" content="width=device-width, initial-scale=1,minimum-scale=1, maximum-scale=1"> 
   <link rel="stylesheet" href="jquery.mobile-1.0.min.css" />
-  <link rel="stylesheet" href="jquery.mobile.simpledialog.min.css" />
   <script src="jquery-1.7.1.min.js"></script>
   <script src="jquery.mobile-1.0.min.js"></script>
-  <script src="jquery.mobile.simpledialog.min.js"></script>
   <script src="data.js"></script>
   <script src="mt.js"></script>
   <script>
@@ -55,17 +53,16 @@ var GameState = function(data, option_count) {
   this._correct_one = 0;
 }
 
-GameState.prototype.isBlacklistEmpty = function() {
-  var flag = true;
+GameState.prototype.getBlacklistCount = function() {
+  var count = 0;
   for (key in this._blacklist) {
-    flag = false;
-    break;
+    ++count;
   }
-  return flag;
+  return count;
 }
 
 GameState.prototype.setMode = function(mode) {
-  if (mode == "blacklist" && this.isBlacklistEmpty()) {
+  if (mode == "blacklist" && this.getBlacklistCount() == 0) {
     return false;
   }
   this._mode = mode;
@@ -252,14 +249,14 @@ var cur_page = 0;
 $(function() {
   initButtons();
   if (game_state.loadLocal()) {
-    if (game_state.isBlacklistEmpty()) {
-      setBlacklistEmptyDialog();
-    }
     var page = game_state.getCurrentPage().replace(/[^a-z0-9_]/g, "");
     if (page == "page0") {
       nextQuestion();
+    } else if (page == "index") {
+      backToIndex();
+    } else {
+      document.location.hash = "#" + page;
     }
-    document.location.hash = "#" + page;
   } else {
     game_state.setCurrentPage("index");
     document.location.hash = "#index";
@@ -280,49 +277,28 @@ function moveTo(page) {
   $.mobile.changePage("#" + page);
 }
 
-function setBlacklistEmptyDialog() {
-  $(document).on("click", "#blacklist_link", function() {
-    $(this).simpledialog({
-      "mode" : "bool",
-      "prompt" : "ブラックリストに単語がありません",
-      "useModal": true,
-      "buttons" : {
-        "OK": {
-          click: function () {
-          }
-        }
-      }
-    })
-  })
-}
-
-function clearBlacklistEmptyDialog() {
-  $(document).off();
-}
-
 function selectReversed(is_reversed) {
   game_state.setReversed(is_reversed);
-  moveTo("select_mode");
+  nextQuestion();
+  moveTo("page0");
 }
 
 function backToIndex() {
   game_state.init();
-  if (game_state.isBlacklistEmpty()) {
-    setBlacklistEmptyDialog();
-  } else {
-    clearBlacklistEmptyDialog();
-  }
+  cur_page = 0;
+  $("#blacklist").text($("#blacklist").text().replace(
+    /\(\d*\)/,"(" + game_state.getBlacklistCount() + ")"));
   moveTo("index");
 }
 
-function startGame(mode) {
+function setMode(mode) {
   if (!game_state.setMode(mode)) {
-    return;
+    return false;
   }
-  nextQuestion();
-  moveTo("page0");
+  moveTo("select_direction");
+  return true;
 }
-  
+
 function nextQuestion() {
   $("#header0,#header1").text(game_state.getStatusString());
   $("#title" + cur_page).text(game_state.getProblem());
@@ -344,6 +320,10 @@ function buttonTouch(page, num) {
   nextQuestion();
 }
 
+function alertBlacklistEmpty() {
+  alert("ブラックリストにデータがありません。");
+}
+
   </script>
   <style>
   .big { font-size: 300%; }
@@ -353,25 +333,29 @@ function buttonTouch(page, num) {
   </style>
 </head>
 <body>
-  <div data-role="page" id="index" data-theme="b" data-backbtn="false">
+  <div data-role="page" id="dummy" data-theme="b">
+  </div>
+
+  <div data-role="page" id="index" data-theme="b">
     <div data-role="header">
       <h3>単語帳</h3>
     </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">メニュー</span></li>
-        <li>
-	  <a href="#select_mode" onclick="selectReversed(false);">
-          <h3>西→日</h3>
-          </a></li>
-        <li>
-	  <a href="#select_mode" onclick="selectReversed(true);">
-          <h3>日→西</h3>
+        <li><a href="#select_direction" onclick="setMode('list');">
+          <h3>リスト順学習</h3>
+        </a></li>
+        <li><a href="#select_direction" onclick="setMode('random');">
+          <h3>ランダム学習</h3>
+        </a></li>
+        <li><a id="blacklist_link" onclick="if (!setMode('blacklist')) { alertBlacklistEmpty(); }">
+          <h3 id="blacklist">ブラックリスト学習 (0)</h3>
         </a></li>
       </ul>
     </div>
   </div>
-  <div data-role="page" id="select_mode" data-theme="b">
+  <div data-role="page" id="select_direction" data-theme="b" data-backbtn="false">
     <div data-role="header">
       <a href="#index" onclick="backToIndex();" data-direction="reverse">
 	メニュー</a>
@@ -379,15 +363,14 @@ function buttonTouch(page, num) {
     </div>
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
-        <li data-role="list-divider"><span class="big">出題順</span></li>
-        <li><a href="#page0" onclick="startGame('list');">
-          <h3>リスト順</h3>
-        </a></li>
-        <li><a href="#page0" onclick="startGame('random');">
-          <h3>ランダム</h3>
-        </a></li>
-        <li><a id="blacklist_link" onclick="startGame('blacklist');">
-          <h3>ブラックリスト学習</h3>
+        <li data-role="list-divider"><span class="big">出題方向</span></li>
+        <li>
+	  <a href="#page0" onclick="selectReversed(false);">
+          <h3>西→日</h3>
+          </a></li>
+        <li>
+	  <a href="#page0" onclick="selectReversed(true);">
+          <h3>日→西</h3>
         </a></li>
       </ul>
     </div>
@@ -401,16 +384,16 @@ function buttonTouch(page, num) {
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title0" class="big"></span></li>
-        <li id="li_0_0" onclick="buttonTouch(0, 0);"><a href="#page1">
+        <li id="li_0_0" onclick="buttonTouch(0, 0);"><a href="#page1" data-transition="slide">
           <h3 id="option_0_0"></h3>
         </a></li>
-        <li id="li_0_2" onclick="buttonTouch(0, 2);"><a href="#page1">
+        <li id="li_0_2" onclick="buttonTouch(0, 2);"><a href="#page1" data-transition="slide">
           <h3 id="option_0_2"></h3>
         </a></li>
-        <li id="li_0_3" onclick="buttonTouch(0, 3);"><a href="#page1">
+        <li id="li_0_3" onclick="buttonTouch(0, 3);"><a href="#page1" data-transition="slide">
           <h3 id="option_0_3"></h3>
         </a></li>
-        <li id="li_0_1" onclick="buttonTouch(0, 1);"><a href="#page1">
+        <li id="li_0_1" onclick="buttonTouch(0, 1);"><a href="#page1" data-transition="slide">
           <h3 id="option_0_1"></h3>
         </a></li>
       </ul>
@@ -425,27 +408,19 @@ function buttonTouch(page, num) {
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title1" class="big"></span></li>
-        <li id="li_1_0" onclick="buttonTouch(1, 0);"><a href="#page0">
+        <li id="li_1_0" onclick="buttonTouch(1, 0);"><a href="#page0" data-transition="slide">
           <h3 id="option_1_0"></h3>
         </a></li>
-        <li id="li_1_2" onclick="buttonTouch(1, 2);"><a href="#page0">
+        <li id="li_1_2" onclick="buttonTouch(1, 2);"><a href="#page0" data-transition="slide">
           <h3 id="option_1_2"></h3>
         </a></li>
-        <li id="li_1_3" onclick="buttonTouch(1, 3);"><a href="#page0">
+        <li id="li_1_3" onclick="buttonTouch(1, 3);"><a href="#page0" data-transition="slide">
           <h3 id="option_1_3"></h3>
         </a></li>
-        <li id="li_1_1" onclick="buttonTouch(1, 1);"><a href="#page0">
+        <li id="li_1_1" onclick="buttonTouch(1, 1);"><a href="#page0" data-transition="slide">
           <h3 id="option_1_1"></h3>
         </a></li>
       </ul>
-    </div>
-  </div>
-  <div data-role="page" id="blacklist_empty" data-theme="b">
-    <div data-role="header" data-theme='b' data-position='inline'>
-      <h1>データなし</h1>
-    </div>
-    <div data-role="content">
-      ブラックリストにデータがありません。
     </div>
   </div>
 </body>
