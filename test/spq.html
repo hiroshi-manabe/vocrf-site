@@ -49,8 +49,11 @@ var GameState = function(data, option_count) {
   this._correct_count = 0;
   this._missed = false;
   this._current_page = "";
+  this._timeout = false;
+  this._timeout_time = 5000;
 
   this._correct_one = 0;
+  this._start_time = null;
 }
 
 GameState.prototype.getBlacklistCount = function() {
@@ -130,6 +133,9 @@ GameState.prototype.loadLocal = function() {
   this._prepareIndex();
   this._blacklist = JSON.parse(localStorage.blacklist);
   this._blacklist_index = JSON.parse(localStorage.blacklist_index);
+  this._timeout = (localStorage.timeout == "true");
+  this.setTimeoutTime(parseFloat(localStorage.timeout_time));
+  this._random_count = parseInt(localStorage.random_count);
 
   for (var i = 0; i < this._random_count; ++i) {
     this._mt.nextInt(0, 2);
@@ -149,6 +155,8 @@ GameState.prototype.saveLocal = function() {
   localStorage.missed = this._missed;
   localStorage.blacklist = JSON.stringify(this._blacklist);
   localStorage.blacklist_index = JSON.stringify(this._blacklist_index);
+  localStorage.timeout = this._timeout;
+  localStorage.timeout_time = this._timeout_time;
 }
 
 GameState.prototype.getIndex = function() {
@@ -160,6 +168,37 @@ GameState.prototype.getIndex = function() {
   default:
     return this._index_list;
   }  
+}
+
+GameState.prototype.setTimeout = function(flag) {
+  this._timeout = flag;
+}
+
+GameState.prototype.getTimeout = function() {
+  return this._timeout;
+}
+
+GameState.prototype.setTimeoutTime = function(time) {
+  if (time < 1000) {
+    time = 1000;
+  } else if (time > 10000) {
+    time = 10000;
+  } else if (isNaN(time)) {
+    time = 5000;
+  }
+  this._timeout_time = time;
+}
+
+GameState.prototype.getTimeoutTime = function() {
+  return this._timeout_time;
+}
+
+GameState.prototype.setStartTime = function() {
+  this._start_time = (new Date()).getTime();
+}
+
+GameState.prototype.getEllapsedTime = function() {
+  return (new Date()).getTime() - this._start_time;
 }
 
 GameState.prototype.getProblem = function() {
@@ -196,6 +235,10 @@ GameState.prototype.getOptions = function() {
   return options;
 }
 
+GameState.prototype.getAnswer = function() {
+  return this._correct_one;
+}
+
 GameState.prototype.giveAnswer = function(answer) {
   var blacklist_offset = 0;
 
@@ -203,6 +246,7 @@ GameState.prototype.giveAnswer = function(answer) {
     if (!this._missed) {
       ++this._correct_count;
       blacklist_offset = -1;
+      this.setTimeoutTime(this.getTimeoutTime() * .95);
     }
     this._missed = false;
   } else {
@@ -210,6 +254,7 @@ GameState.prototype.giveAnswer = function(answer) {
       this._missed = true;
       blacklist_offset = 1;
     }
+    this.setTimeoutTime(this.getTimeoutTime() + 100);
   }
   
   var index = (this.getIndex())[this._problem_number];
@@ -240,11 +285,13 @@ GameState.prototype.getStatusString = function() {
 }
 
 var max_option_count = 4;
-var option_count = 2;
+var option_count = 3;
 
 // "data" should be provided as an array by an external script
 var game_state = new GameState(data, option_count);
 var cur_page = 0;
+var timer = null;
+var timeout = false;
 
 $(function() {
   initButtons();
@@ -252,16 +299,22 @@ $(function() {
     var page = game_state.getCurrentPage().replace(/[^a-z0-9_]/g, "");
     if (page == "page0") {
       nextQuestion();
+      document.location.hash = "#" + page;
     } else if (page == "index") {
       backToIndex();
     } else {
       document.location.hash = "#" + page;
     }
+    $("#timeout").val(game_state.getTimeout() ? "on" : "off").slider("refresh");
   } else {
     game_state.setCurrentPage("index");
     document.location.hash = "#index";
     game_state.saveLocal();
   }
+  $("#timeout").change(function(){
+    game_state.setTimeout(this.value == "on");
+    game_state.saveLocal();
+  });
 })
 
 function initButtons() {
@@ -279,11 +332,13 @@ function moveTo(page) {
 
 function selectReversed(is_reversed) {
   game_state.setReversed(is_reversed);
+  game_state.saveLocal();
   nextQuestion();
   moveTo("page0");
 }
 
 function backToIndex() {
+  clearInterval(timer);
   game_state.init();
   cur_page = 0;
   $("#blacklist").text($("#blacklist").text().replace(
@@ -306,15 +361,62 @@ function nextQuestion() {
   for (var i = 0; i < options.length; ++i) {
     $("#option_" + cur_page + "_" + i).text(options[i]);
   }
+  if (game_state.getTimeout()) {
+    game_state.setStartTime();
+    timeout = false;
+    timer = setInterval(timerFunc, 50);
+  }
+}
+
+function timerFunc() {
+  ellapsed = game_state.getEllapsedTime();
+  if (timeout && ellapsed > game_state.getTimeoutTime() + 500) {
+    clearInterval(timer);
+    $("#a_" + cur_page + "_" + game_state.getAnswer()).click();
+  } else if (!timeout) {
+    drawBar();
+    if (ellapsed > game_state.getTimeoutTime()) {
+      timeout = true;
+      var answer = game_state.getAnswer();
+      for (var i = 0; i < option_count; ++i) {
+        elem = $("#option_" + cur_page + "_" + i);
+        elem.text(elem.text() + " " + (i == answer ? "◯" : "×"));
+      }
+    }
+  }
+}
+
+function drawBar() {
+  var canvas = $("#timeout_canvas_" + cur_page)[0];
+  var context = canvas.getContext("2d");
+  var lingrad = context.createLinearGradient(0,0,canvas.width, canvas.height);
+  lingrad.addColorStop(0, '#F00');
+  lingrad.addColorStop(1, '#0F0');
+  ratio = game_state.getEllapsedTime() / game_state.getTimeoutTime();
+  if (ratio < 0) {
+    ratio = 0;
+  }
+  context.fillStyle = lingrad;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "black";
+  context.fillRect(canvas.width * (1 - ratio), 0, canvas.width, canvas.height);
 }
 
 function buttonTouch(page, num) {
   if (page != cur_page) {
     return;
   }
+
+  clearInterval(timer);
+  if (timeout) {
+    num = -1;
+  }
+
   var correct_one = game_state.giveAnswer(num);
-  elem = $("#option_" + cur_page + "_" + num);
-  elem.text(elem.text() + " " + (num == correct_one ? "◯" : "×"));
+  if (!timeout) {
+    elem = $("#option_" + cur_page + "_" + num);
+    elem.text(elem.text() + " " + (num == correct_one ? "◯" : "×"));
+  }
 
   cur_page = 1 - cur_page;
   nextQuestion();
@@ -328,8 +430,9 @@ function alertBlacklistEmpty() {
   <style>
   .big { font-size: 300%; }
   .in, .out {
-    -webkit-animation-duration: 250ms;
+    -webkit-animation-duration: 500ms;
   }
+  .timeout { width: 100%; height: 20px; }
   </style>
 </head>
 <body>
@@ -373,6 +476,13 @@ function alertBlacklistEmpty() {
           <h3>日→西</h3>
         </a></li>
       </ul>
+      <div data-role="fieldcontain">
+        タイムアウト
+        <select id="timeout" data-role="slider">
+          <option value="on">あり</option>
+          <option value="off" selected>なし</option>
+        </select>
+      </div>
     </div>
   </div>
   <div data-role="page" id="page0" data-theme="b">
@@ -384,19 +494,20 @@ function alertBlacklistEmpty() {
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title0" class="big"></span></li>
-        <li id="li_0_0" onclick="buttonTouch(0, 0);"><a href="#page1" data-transition="slide">
+        <li id="li_0_0" onclick="buttonTouch(0, 0);"><a id="a_0_0" href="#page1" data-transition="slide">
           <h3 id="option_0_0"></h3>
         </a></li>
-        <li id="li_0_2" onclick="buttonTouch(0, 2);"><a href="#page1" data-transition="slide">
+        <li id="li_0_2" onclick="buttonTouch(0, 2);"><a id="a_0_2" href="#page1" data-transition="slide">
           <h3 id="option_0_2"></h3>
         </a></li>
-        <li id="li_0_3" onclick="buttonTouch(0, 3);"><a href="#page1" data-transition="slide">
+        <li id="li_0_3" onclick="buttonTouch(0, 3);"><a id="a_0_3" href="#page1" data-transition="slide">
           <h3 id="option_0_3"></h3>
         </a></li>
-        <li id="li_0_1" onclick="buttonTouch(0, 1);"><a href="#page1" data-transition="slide">
+        <li id="li_0_1" onclick="buttonTouch(0, 1);"><a id="a_0_1" href="#page1" data-transition="slide">
           <h3 id="option_0_1"></h3>
         </a></li>
       </ul>
+      <canvas id="timeout_canvas_0" class="timeout"></canvas>
     </div>
   </div>
   <div data-role="page" id="page1" data-theme="b">
@@ -408,19 +519,20 @@ function alertBlacklistEmpty() {
     <div data-role="content">
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span id="title1" class="big"></span></li>
-        <li id="li_1_0" onclick="buttonTouch(1, 0);"><a href="#page0" data-transition="slide">
+        <li id="li_1_0" onclick="buttonTouch(1, 0);"><a id="a_1_0" href="#page0" data-transition="slide">
           <h3 id="option_1_0"></h3>
         </a></li>
-        <li id="li_1_2" onclick="buttonTouch(1, 2);"><a href="#page0" data-transition="slide">
+        <li id="li_1_2" onclick="buttonTouch(1, 2);"><a id="a_1_2" href="#page0" data-transition="slide">
           <h3 id="option_1_2"></h3>
         </a></li>
-        <li id="li_1_3" onclick="buttonTouch(1, 3);"><a href="#page0" data-transition="slide">
+        <li id="li_1_3" onclick="buttonTouch(1, 3);"><a id="a_1_3" href="#page0" data-transition="slide">
           <h3 id="option_1_3"></h3>
         </a></li>
-        <li id="li_1_1" onclick="buttonTouch(1, 1);"><a href="#page0" data-transition="slide">
+        <li id="li_1_1" onclick="buttonTouch(1, 1);"><a id="a_1_1" href="#page0" data-transition="slide">
           <h3 id="option_1_1"></h3>
         </a></li>
       </ul>
+      <canvas id="timeout_canvas_1" class="timeout"></canvas>
     </div>
   </div>
 </body>
