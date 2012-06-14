@@ -1,5 +1,5 @@
 <!DOCTYPE html> 
-<html> 
+<html manifest="spq.manifest"> 
   <head> 
   <meta charset="UTF-8">
   <title>Spanish word quiz</title> 
@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="jquery.mobile-1.0.min.css" />
   <script src="jquery-1.7.1.min.js"></script>
   <script src="jquery.mobile-1.0.min.js"></script>
-  <script src="data.js"></script>
+  <script>data={};</script>
+  <script src="data_sp.js"></script>
+  <script src="data_it.js"></script>
   <script src="mt.js"></script>
   <script>
 
@@ -32,7 +34,7 @@ Array.prototype.shuffle = function(mt) {
 }
 
 var GameState = function(data, option_count) {
-  this._problem_data = data;
+  this._problem_data = null;
   this._index_list = null;
   this._index_shuffled = null;
   this._blacklist = {};
@@ -40,6 +42,7 @@ var GameState = function(data, option_count) {
   this._option_count = option_count;
 
   this._is_reversed = false;
+  this._lang = "";
   this._mode = "list";
   this._random_seed = 0;
   this._random_count = 0;
@@ -78,6 +81,11 @@ GameState.prototype.setReversed = function(is_reversed) {
   this.saveLocal();
 }
 
+GameState.prototype.setLang = function(lang) {
+  this._lang = lang;
+  this.saveLocal();
+}
+
 GameState.prototype.setCurrentPage = function(page) {
   this._current_page = page;
   this.saveLocal();
@@ -109,7 +117,6 @@ GameState.prototype.init = function() {
   this._random_count_temp = 0;
   this._missed = false;
   this._mt = new MersenneTwister(this._random_seed);
-  this._prepareIndex();
   this._blacklist_index = [];
   for (key in this._blacklist) {
     this._blacklist_index.push(key);
@@ -119,7 +126,6 @@ GameState.prototype.init = function() {
 
 GameState.prototype.loadLocal = function() {
   if (localStorage.has_data != "true") return false;
-
   this._current_page = localStorage.current_page;
   this._problem_number = parseInt(localStorage.problem_number);
   this._correct_count = parseInt(localStorage.correct_count);
@@ -130,6 +136,8 @@ GameState.prototype.loadLocal = function() {
   this._random_count = parseInt(localStorage.random_count);
   this._random_count_temp = this._random_count;
   this._mt = new MersenneTwister(this._random_seed);
+  this._lang = (localStorage.lang);
+  this._problem_data = data[this._lang];
   this._prepareIndex();
   this._blacklist = JSON.parse(localStorage.blacklist);
   this._blacklist_index = JSON.parse(localStorage.blacklist_index);
@@ -149,6 +157,7 @@ GameState.prototype.saveLocal = function() {
   localStorage.problem_number = this._problem_number;
   localStorage.correct_count = this._correct_count;
   localStorage.is_reversed = this._is_reversed;
+  localStorage.lang = this._lang;
   localStorage.mode = this._mode;
   localStorage.random_seed = this._random_seed;
   localStorage.random_count = this._random_count;
@@ -305,6 +314,7 @@ $(function() {
     } else {
       document.location.hash = "#" + page;
     }
+    $("#timeout").val(game_state.getTimeout() ? "on" : "off").slider();
     $("#timeout").val(game_state.getTimeout() ? "on" : "off").slider("refresh");
   } else {
     game_state.setCurrentPage("index");
@@ -330,7 +340,15 @@ function moveTo(page) {
   $.mobile.changePage("#" + page);
 }
 
-function selectReversed(is_reversed) {
+function selectLangAndReversed(lang, is_reversed) {
+  if (game_state._mode == "blacklist" && game_state._lang != lang) {
+    alert("ブラックリストのデータと言語が違います。");
+    return false;
+  }
+  game_state.init();
+  game_state._problem_data = data[lang];
+  game_state._prepareIndex();
+  game_state.setLang(lang);
   game_state.setReversed(is_reversed);
   game_state.saveLocal();
   nextQuestion();
@@ -436,9 +454,6 @@ function alertBlacklistEmpty() {
   </style>
 </head>
 <body>
-  <div data-role="page" id="dummy" data-theme="b">
-  </div>
-
   <div data-role="page" id="index" data-theme="b">
     <div data-role="header">
       <h3>単語帳</h3>
@@ -468,12 +483,20 @@ function alertBlacklistEmpty() {
       <ul data-role="listview" data-inset="true">
         <li data-role="list-divider"><span class="big">出題方向</span></li>
         <li>
-	  <a href="#page0" onclick="selectReversed(false);">
+	  <a onclick="selectLangAndReversed('sp', false);">
           <h3>西→日</h3>
           </a></li>
         <li>
-	  <a href="#page0" onclick="selectReversed(true);">
+	  <a onclick="selectLangAndReversed('sp', true);">
           <h3>日→西</h3>
+        </a></li>
+        <li>
+	  <a onclick="selectLangAndReversed('it', false);">
+          <h3>伊→日</h3>
+          </a></li>
+        <li>
+	  <a onclick="selectLangAndReversed('it', true);">
+          <h3>日→伊</h3>
         </a></li>
       </ul>
       <div data-role="fieldcontain">
