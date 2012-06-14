@@ -229,7 +229,6 @@ data["it"] = [
 ["canone", "大砲", "S"],
 ["cantiere", "造船所、作業場", "S"],
 ["cantina", "ワインセラー", "S"],
-["capitolare", "?", "S"],
 ["capitolo", "章", "S"],
 ["capra", "ヤギ", "S"],
 ["capretto", "子ヤギ", "S"],
