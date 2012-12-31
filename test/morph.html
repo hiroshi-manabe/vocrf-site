@@ -15,8 +15,8 @@
                 success: function(data, dataType) {
                     alert(data);
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert(textStatus);
+                error: function(jqXHR, textStatus, errorThrown) {
+                    this.error(jqXHR, textStatus, errorThrown);
                 }
             });
         });
