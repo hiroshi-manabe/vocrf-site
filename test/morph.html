@@ -6,7 +6,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $('#send').click(function() {
-            var query_url = "http://vocrf.net:7000/?is_json=1&q=" + encodeURI($('#input_area').val());
+            var query_url = "http://vocrf.net:7000/?is_ajax=1&q=" + encodeURI($('#input_area').val());
             $.ajax({
                 type: "GET",
                 scriptCharset: 'utf-8',
