@@ -6,7 +6,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $('#send').click(function() {
-            var data = {request : $('#input_area').val()};
+            var data = $('#input_area').val();
             $.ajax({
                 type: "GET",
                 url: "http://vocrf.net:7000/?q=" + encodeURI(data),
