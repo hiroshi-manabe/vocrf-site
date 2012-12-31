@@ -1,36 +1,15 @@
+
 <html>
 <head>
 <meta http-equiv='Content-type' content='text/html; charset='utf-8'>
 </head>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#send').click(function() {
-            var query_url = "http://vocrf.net:7000/?is_ajax=1&q=" + encodeURI($('#input_area').val());
-            $.ajax({
-                type: "GET",
-                scriptCharset: 'utf-8',
-                url: query_url,
-                dataType: 'json',
-                success: function(data, dataType) {
-                    alert(data);
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    alert(jqXHR.responseText);
-                }
-            });
-        });
-        $('form').submit(function() {
-            return false;
-        });
-    });
-</script>
 <body>
-<form method='GET'>
-<input id='send' value='convert' type='submit'><br>
-<textarea id='input_area' cols="80" rows="5">
+<form method='GET' action='http://vocrf.net:7000/' target='result'>
+<textarea id='q' cols='80' rows='5'>
 </textarea>
-<span id='result_area'>
+<input id='send' value='convert' type='submit'><br>
 </span>
+<iframe src='' name='result' id='result' width='400' height='200'>
+</iframe>
 </body>
 </html>
