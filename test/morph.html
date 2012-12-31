@@ -16,7 +16,7 @@
                     alert(data);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    this.error(jqXHR, textStatus, errorThrown);
+                    alert(jqXHR.responseText);
                 }
             });
         });
