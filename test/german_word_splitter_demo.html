@@ -4,13 +4,15 @@
     <title>German Word Decomposer Demo</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script>
-      $('#from').keypress(function() {
-        convert();
-      });
-      $('#from').keyup(function(e) {
-        if (e.keyCode == 46 || e.keyCode == 8){
+      $(document).ready(function(){
+        $('#from').keypress(function() {
           convert();
-        }
+        });
+        $('#from').keyup(function(e) {
+          if (e.keyCode == 46 || e.keyCode == 8){
+            convert();
+          }
+        });
       });
       function convert() {
         var str = $('#from').val();
