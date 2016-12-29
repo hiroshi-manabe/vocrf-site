@@ -19,7 +19,7 @@
         $.post('http://vocrf.net:7000/',
                { q: str },
                function(data) {
-                 $('#to').val(data);
+                 $('#to').val(data['result']);
                },
                'json'
               );
@@ -28,6 +28,7 @@
   </head>
   <body>
     <textarea id='from' style='width:100%;height:200px;'></textarea>
+    <br>
     <textarea id='to' style='width:100%;height:200px;' readonly></textarea>
   </body>
 </html>
