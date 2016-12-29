@@ -16,18 +16,13 @@
       });
       function convert() {
         var str = $('#from').val();
-        $.ajax({
-          type : 'post',
-          url : 'http://vocrf.net:7000/',
-          data : JSON.stringify({q : str}),
-          contentType: 'application/JSON',
-          dataType : 'JSON',
-          scriptCharset: 'utf-8',
-          success : function(data) {
-            $('#to').val(data['result']);
-          }
-          error : function(data) {}
-        });
+        $.post('http://vocrf.net:7000/',
+               { q: str },
+               function(data) {
+                 $('#to').val(data['result']);
+               },
+               'json'
+              );
       }
     </script>
   </head>
