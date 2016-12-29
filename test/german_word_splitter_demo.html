@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>German Word Decomposer Demo</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+      $('#from').keypress(function() {
+        convert();
+      });
+      $('#from').keyup(function(e) {
+        if (e.keyCode == 46 || e.keyCode == 8){
+          convert();
+        }
+      });
+      function convert() {
+        var str = $('#from').val();
+        $.post('http://vocrf.net:7000/',
+               { q: str },
+               function(data) {
+                 $('#to').val(data);
+               },
+               'json'
+              );
+      }
+    </script>
+  </head>
+  <body>
+    <textarea id='from' style='width:100%;height:200px;'></textarea>
+    <textarea id='to' style='width:100%;height:200px;' readonly></textarea>
+  </body>
+</html>
