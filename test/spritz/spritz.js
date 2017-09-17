@@ -81,7 +81,7 @@ function pivot(word){
         var start = '';
         var end = '';
         var pos = word.length/2;
-        if (start.charAt(pos) === ' ') {
+        if (word.charAt(pos - 1) === ' ') {
             pos++;
         }
         start = word.slice(0, pos);
