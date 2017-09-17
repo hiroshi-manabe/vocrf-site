@@ -63,7 +63,7 @@ function pivot(word){
     var length = word.length;
 
     if(word.charCodeAt(0) >= 0x80) {
-        ;
+        result = "<span class='start'>" + word + "</span>";
     }
     else if(length<14){
 
