@@ -2,7 +2,7 @@ function spritzify(input, output, wpm, no_preprocess){
     var words_per_minute = wpm;
     var ms_per_word = 60000/wpm;
 
-    var all_words = input.split(' ');
+    var all_words;
 
     var word = '';
     var result = '';
@@ -11,6 +11,7 @@ function spritzify(input, output, wpm, no_preprocess){
         all_words = input;
     }
     else {
+        all_words = input.split(' ');
         // Preprocess words
         var temp_words = all_words.slice(0); // copy Array
         var t = 0;
