@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8"></meta>
+    <head>
+        <title>OpenSpritz</title>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="spritz.js"></script>
+        <script src="french_words_to_review.js" charset="UTF-8"></script>
+        <link href='//fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+        <link href='style.css' rel='stylesheet' type='text/css'>
+
+        <script>
+        $(document).ready(function() {
+            $('#sub').click(function () {
+                clearTimeouts();
+                var valueSelected = $("#selector").val();
+                var input = shuffle(get_data());
+                spritzify(input, '#result', valueSelected, true);
+            });
+        });
+        function shuffle(array) {
+            var n = array.length, t, i;
+            while (n) {
+                i = Math.floor(Math.random() * n--);
+                t = array[n];
+                array[n] = array[i];
+                array[i] = t;
+            }
+            return array;
+        }
+        </script>
+
+    </head>
+
+    <body>
+        <div id="container">
+
+            <div id="guide_top">
+――――――――――<span id="notch">ф</span>―――――――――――
+            </div>
+
+            <div id="result">
+                Input some text.
+            </div>
+
+            <div id="guide_bottom">
+――――――――――――――――――――――
+            </div>
+
+            <select id="selector" selected="600">
+              <option value="100">100wpm</option>
+              <option value="200">200wpm</option>
+              <option value="300">300wpm</option>
+              <option value="400">400wpm</option>
+              <option value="500">500wpm</option>
+              <option selected="selected" value="600">600wpm</option>
+              <option value="700">700wpm</option>
+              <option value="800">800wpm</option>
+              <option value="900">900wpm</option>
+              <option value="1000">1000wpm</option>
+            </select><br>
+            
+            <button id="sub">Spritz Me!</button>
+		<br><br>
+		Home-made version of: <a href="http://www.spritzinc.com/">spritzinc.com</a><br>
+		Original Github Project: <a href="https://github.com/miserlou/OpenSpritz">github.com/miserlou/OpenSpritz</a>
+		My Fork Shown Here: <a href="https://github.com/nikisweeting/OpenSpritz">github.com/nikisweeting/OpenSpritz</a>
+        </div>
+    </body>
+</html>

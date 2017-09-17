@@ -1,0 +1,52 @@
+body{
+
+}
+
+#container{
+    width: 50%;
+    margin-left: 25%;
+    margin-right: 25%;
+}
+
+#result{
+    text-align: center;
+    font-size: 32px;
+    font-family: 'Droid Sans Mono', sans-serif;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    min-height: 40px;
+}
+
+#guide_top{
+    text-align: center;
+    font-size: 32px;
+    font-family: 'Droid Sans Mono', sans-serif;
+    color: #DDDDDD;
+}
+
+#guide_bottom{
+    text-align: center;
+    font-size: 32px;
+    font-family: 'Droid Sans Mono', sans-serif;
+    color: #DDDDDD;
+}
+
+#notch{
+    margin-top: 9px;
+    padding-top: 12px;
+}
+
+.invisible{
+    font-family: 'Droid Sans Mono', sans-serif;
+    color: #ffffff;
+}
+
+.start{
+    color: #333333;
+}
+.pivot{
+    color: #DE0000;
+}
+.end{
+    color: #333333;
+}
