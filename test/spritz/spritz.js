@@ -62,7 +62,7 @@ function spritzify(input, output, wpm, no_preprocess){
 function pivot(word){
     var length = word.length;
 
-    if(words.charCodeAt(0) >= 0x80) {
+    if(word.charCodeAt(0) >= 0x80) {
         ;
     }
     else if(length<14){
