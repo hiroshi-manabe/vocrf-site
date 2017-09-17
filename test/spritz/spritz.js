@@ -129,5 +129,10 @@ function clearTimeouts(){
 }
 
 String.prototype.repeat = function( num ) {
-    return new Array( num + 1 ).join( this );
+    if (num <= 0) {
+        return '';
+    }
+    else {
+        return new Array( num + 1 ).join( this );
+    }
 }
