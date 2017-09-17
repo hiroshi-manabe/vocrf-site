@@ -62,10 +62,10 @@ function spritzify(input, output, wpm, no_preprocess){
 function pivot(word){
     var length = word.length;
 
-    if(length<6){
+    if(length<14){
 
         var bit = 1;
-        while(word.length < 22){
+        while(word.length < 40){
             if(bit > 0){
                 word = word + '.';
             }
@@ -95,7 +95,7 @@ function pivot(word){
 
     else{
 
-        var tail = 40 - (word.length + 7);
+        var tail = 40 - (word.length + 14);
         word = '.......' + word + ('.'.repeat(tail));
 
         var start = word.slice(0, word.length/2);
