@@ -1,6 +1,5 @@
 function get_data() {
-    return
-    "Michael Ende - Momo" +
+    return "Michael Ende - Momo" +
         "oder - Die seltsame Geschichte von den Zeit-Dieben und von dem Kind, " +
         "das den Menschen die gestohlene Zeit zurückbrachte." +
         "Ein Märchen-Roman" +
