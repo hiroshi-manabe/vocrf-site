@@ -62,7 +62,7 @@ function spritzify(input, output, wpm, no_preprocess){
 function pivot(word){
     var length = word.length;
 
-    if(!word.match(/^[\u{0}-\u{7ff}\W]+$/) {
+    if(!word.match(/^[\u{0000}-\u{07ff}\W]+$/) {
         result = "<span class='start'>" + word + "</span>";
     }
     else if(length<14){
