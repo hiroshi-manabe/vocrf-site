@@ -85,10 +85,10 @@
           document.getElementById("vi").innerText = data[num][0][0];
           document.getElementById("ko").innerText = data[num][0][1];
           document.getElementById("han").innerText = data[num][0][2];
-          for (let i = 0; i < data[num].length; ++i) {
+          for (let i = 0; i < 10; ++i) {
               for (let j = 0; j < 2; ++j) {
                   const id = i + "_" + j;
-                  document.getElementById(id).innerText = data[num][i][j+3];
+                  document.getElementById(id).innerText = i < data[num].length ? data[num][i][j+3] : "*";
               }
           }
           gNum = num;
