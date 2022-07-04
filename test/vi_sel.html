@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sentence selection</title>
+    <script src="./vi_data.js"></script>
+    <style>
+      :lang(vi) { font-family: "Arial"; }
+      :lang(ko) { font-family: "Gulim"; }
+    </style>
+  </head>
+  <body onload="numChanged(0);">
+    <div>
+      <input type="number" id="number" value="0" onchange="numChanged(this.value);">
+    </div>
+    <div id="result">
+      &nbsp;
+    </div>
+    <h2 id="vi" lang="vi">
+    </h2>
+    <h2 id="ko" lang="ko">
+    </h2>
+    <h2 id="han" lang="zh-TW">
+    </h2>
+    <table id="sent" border="1">
+<tr>
+<td onclick="trClicked(0);">*</td>
+<td id="0_0" lang="en">*</td>
+<td id="0_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(1);">*</td>
+<td id="1_0" lang="en">*</td>
+<td id="1_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(2);">*</td>
+<td id="2_0" lang="en">*</td>
+<td id="2_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(3);">*</td>
+<td id="3_0" lang="en">*</td>
+<td id="3_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(4);">*</td>
+<td id="4_0" lang="en">*</td>
+<td id="4_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(5);">*</td>
+<td id="5_0" lang="en">*</td>
+<td id="5_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(6);">*</td>
+<td id="6_0" lang="en">*</td>
+<td id="6_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(7);">*</td>
+<td id="7_0" lang="en">*</td>
+<td id="7_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(8);">*</td>
+<td id="8_0" lang="en">*</td>
+<td id="8_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(9);">*</td>
+<td id="9_0" lang="en">*</td>
+<td id="9_1" lang="vi">*</td>
+</tr>
+<tr>
+<td onclick="trClicked(10);">*</td>
+<td id="10_0" lang="en">*</td>
+<td id="10_1" lang="vi">*</td>
+</tr>
+    </table>
+    <script>
+      let gNum = 0;
+      function numChanged(num) {
+          document.getElementById("vi").innerText = data[num][0][0];
+          document.getElementById("ko").innerText = data[num][0][1];
+          document.getElementById("han").innerText = data[num][0][2];
+          for (let i = 0; i < data[num].length; ++i) {
+              for (let j = 0; j < 2; ++j) {
+                  const id = i + "_" + j;
+                  document.getElementById(id).innerText = data[num][i][j+3];
+              }
+          }
+          gNum = num;
+      }
+      function trClicked(num) {
+          let r = document.getElementById("result");
+          r.innerHTML += (num == 10 ? "x" : num) + " ";
+          gNum++;
+          let n = document.getElementById("number");
+          n.value = gNum;
+          numChanged(gNum);
+      }
+    </script>
+  </body>
+</html>
