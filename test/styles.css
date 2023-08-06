@@ -1,0 +1,32 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+#stopwatch {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+#times {
+    margin-top: 20px;
+    overflow-y: scroll;
+    height: calc(100vh - 150px);
+    width: 100%;
+    padding: 10px;
+}
