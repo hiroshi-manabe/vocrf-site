@@ -16,6 +16,7 @@ body {
     justify-content: center;
     padding: 20px;
     background-color: #f5f5f5;
+    text-align: center;
 }
 
 #stopwatch {
@@ -23,10 +24,24 @@ body {
     margin-bottom: 20px;
 }
 
+button {
+    font-size: 24px; /* Increase the font size */
+    padding: 15px 25px; /* Add more padding */
+    margin: 5px; /* Add some margin between buttons */
+    cursor: pointer; /* Make it clear that it's clickable */
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 5px; /* Rounded corners */
+}
+
+button:hover {
+    background-color: #e0e0e0; /* Change color on hover */
+}
+
 #times {
     margin-top: 20px;
     overflow-y: scroll;
-    height: calc(100vh - 150px);
+    height: calc(100vh - 200px); /* Adjust based on your specific layout */
     width: 100%;
     padding: 10px;
 }

@@ -7,6 +7,7 @@ let timerRunning = false;
 
 document.body.onkeyup = function(e) {
     if (e.keyCode == 32) { // Space key
+        e.preventDefault(); // Prevent the default action
         recordTime();
     } else if (e.keyCode == 83) { // 'S' key
         if (timerRunning) {
@@ -48,6 +49,8 @@ function stopTimer() {
 }
 
 function recordTime() {
+    if (!timerRunning) return; // If the timer is not running, exit the function without recording a time
+
     let time = (elapsedTime / 1000).toFixed(2);
     recordedTimes.push(time);
 
