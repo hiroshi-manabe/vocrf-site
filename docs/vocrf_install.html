@@ -33,11 +33,11 @@ Next, download the package of CRFSuite for variable-order Markov models (crfsuit
 <a name="usage">
 <h2>Usage</h2>
 <p>
-The basic usage is common as the original <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a>. The difference lies that crfsuite-variableorder does not auto-generate features and instead read them from a file, which should be specified by -f or --features option. Here is the format to describe a feature of (n-1)th order.
+The basic usage is similar to the original <a href="http://www.chokkan.org/software/crfsuite/">CRFSuite</a>. The main difference is that crfsuite-variableorder does not auto-generate features and instead reads them from a file specified by the -f or --features option. Here is the format used to describe a feature of order (n-1).
 <pre>
 ATTR[tab]LABEL0[tab]LABEL1[tab]...LABELn[newline]
 </pre>
-The order is : LABEL0 for the current position, LABEL1 for the previous position etc. For example, a feature activated when the label sequence to the current position is NN-VBZ-IN and the word at the current position is "like" should be described as follows:
+The order is as follows: LABEL0 for the current position, LABEL1 for the previous position, and so on. For example, a feature activated when the label sequence up to the current position is NN-VBZ-IN and the word at the current position is "like" should be described as follows:
 <pre>
 W0_like[tab]IN[tab]VBZ[tab]NN[newline]
 </pre>
@@ -48,10 +48,10 @@ where "W0_" is an arbitrary prefix.
 The format of training/evaluation data file is the same as the original CRFSuite. Please refer to the <a href="http://www.chokkan.org/software/crfsuite/manual.html">CRFSuite manual</a>.
 </p>
 <p>
-It is not realistic to manually write the features/training/evaluation files, so you will need a script to generate them. The source and binary packages contain an "example" directory, under which you can find a python script "conv.py". I wrote this script for the English POS-tagging task. You should customize the script in order to apply to other kind of tasks.
+It is not realistic to manually write the features, training, and evaluation files, so a script is usually needed to generate them. The source and binary packages contain an "example" directory with a Python script named "conv.py". The script was originally written for English POS tagging and should be customized for other kinds of tasks.
 </p>
 <p>
-If you have Penn Treebank 3, you can reproduce the experiences in my thesis:
+If you have Penn Treebank 3, you can reproduce the experiments described in Hiroshi Manabe's thesis:
 </p>
 <p>
 Open mrg_to_pos.py under "example" and modify the part that contains the path to the "mrg" directory. Run the script to convert the .mrg files into text files, which should look like:
@@ -67,7 +67,7 @@ JJ	old
 </pre>
 </p>
 <p>
-train.txt and test.txt respectively contain data in 0-18 and 22-24. Execute "conv.py" to generate the same dataset as in "maximum 2nd order" in my thesis (the number of the features won't be exactly the same because of the changes in end-of-sequence processing. Features/training/evaluation data should be output respectively as "features.txt", "train_data.txt", "test_data.txt". features.txt should look like as follows:
+train.txt and test.txt respectively contain data in 0-18 and 22-24. Execute "conv.py" to generate the same dataset as in "maximum 2nd order" in the thesis (the number of features will not be exactly the same because of changes in end-of-sequence processing). Features, training data, and evaluation data should be written respectively as "features.txt", "train_data.txt", and "test_data.txt". features.txt should look as follows:
 <pre>
 W-2-1_of_crop	.
 W-2-1_of_crop	NN
@@ -90,7 +90,7 @@ To train the model, input the following line:
 $ crfsuite learn -m wsj.model -t test_data.txt -f features.txt train_data.txt
 </code>
 </pre>
-The program consumes 20 to 30 gigabytes (it could have been programmed to swap out the data as it is accessed only sequentially, but I chose not to, because of the lack of time). The model will be output as wsj.model.
+The program consumes 20 to 30 gigabytes. The implementation keeps the data in memory rather than swapping it out during sequential access, so substantial memory is required. The model will be written to wsj.model.
 </p>
 <p>
 To tag sentences using the model, input the following line:
@@ -101,7 +101,7 @@ $ crfsuite tag -m wsj.model test.txt
 </pre>
 </p>
 <p>
-To evaluate the tagging performance, input to
+To evaluate the tagging performance, input:
 <pre>
 <code>
 $ crfsuite tag -m wsj.model -qt test.txt
